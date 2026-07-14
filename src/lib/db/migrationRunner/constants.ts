@@ -72,19 +72,37 @@ export const RENAMED_MIGRATION_COMPATIBILITY = [
   {
     fromVersion: "123",
     fromName: "windsurf_to_devin_desktop",
-    toVersion: "126",
+    toVersion: "131",
     toName: "windsurf_to_devin_desktop",
   },
   {
     fromVersion: "124",
     fromName: "windsurf_to_devin_desktop",
-    toVersion: "126",
+    toVersion: "131",
     toName: "windsurf_to_devin_desktop",
   },
   {
     fromVersion: "125",
     fromName: "windsurf_to_devin_desktop",
-    toVersion: "126",
+    toVersion: "131",
+    toName: "windsurf_to_devin_desktop",
+  },
+  {
+    fromVersion: "126",
+    fromName: "windsurf_to_devin_desktop",
+    toVersion: "131",
+    toName: "windsurf_to_devin_desktop",
+  },
+  {
+    fromVersion: "127",
+    fromName: "windsurf_to_devin_desktop",
+    toVersion: "131",
+    toName: "windsurf_to_devin_desktop",
+  },
+  {
+    fromVersion: "128",
+    fromName: "windsurf_to_devin_desktop",
+    toVersion: "131",
     toName: "windsurf_to_devin_desktop",
   },
 ] as const;

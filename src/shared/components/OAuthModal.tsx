@@ -2,18 +2,19 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
+import {
+  looksLikeCodexSessionJson,
+  parseCodexSessionJson,
+} from "@/lib/oauth/utils/codexSessionImport";
+import { isCredentialBlob, submitCredentialBlob } from "@/shared/components/oauthBlobSubmit";
+import GheConfigStep from "@/shared/components/oauthModal/GheConfigStep";
+import { parseResponseBody, getErrorMessage } from "@/shared/utils/api";
+
 import Modal from "./Modal";
 import Button from "./Button";
 import Input from "./Input";
 import LinkifiedText from "./LinkifiedText";
 import { OAuthDeviceCodePanel, OAuthManualInputPanel } from "./OAuthModalPanels";
-import { parseResponseBody, getErrorMessage } from "@/shared/utils/api";
-import { isCredentialBlob, submitCredentialBlob } from "@/shared/components/oauthBlobSubmit";
-import {
-  looksLikeCodexSessionJson,
-  parseCodexSessionJson,
-} from "@/lib/oauth/utils/codexSessionImport";
-import GheConfigStep from "@/shared/components/oauthModal/GheConfigStep";
 
 export { formatDeviceCodeRemaining } from "./OAuthModalPanels";
 

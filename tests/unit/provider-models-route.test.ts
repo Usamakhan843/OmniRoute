@@ -1010,10 +1010,8 @@ test("provider models route falls back through all Antigravity discovery endpoin
     "https://daily-cloudcode-pa.sandbox.googleapis.com/v1internal:models",
   ]);
   const modelIds = new Set(body.models.map((model) => model.id));
-  assert.equal(modelIds.has("gemini-3.1-pro-high"), false);
-  assert.ok(modelIds.has("gemini-pro-agent"));
-  assert.equal(modelIds.has("gemini-3-pro-preview"), false);
-  assert.equal(modelIds.has("gemini-2.5-computer-use-preview-10-2025"), false);
+  // prettier-ignore
+  assert.deepEqual(["gemini-3.1-pro-high", "gemini-pro-agent", "gemini-3-pro-preview", "gemini-2.5-computer-use-preview-10-2025"].map((id) => modelIds.has(id)), [false, true, false, false]);
 });
 
 test("provider models route filters hidden models from the static Claude catalog when requested", async () => {

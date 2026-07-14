@@ -118,7 +118,6 @@ const KIRO_REQUIRED_FIELDS = [
   "socialRefreshUrl",
   "authMethods",
 ];
-
 const REQUIRED_FIELDS_BY_PROVIDER = {
   claude: ["authorizeUrl", "tokenUrl", "redirectUri", "scopes", "clientId"],
   codex: ["authorizeUrl", "tokenUrl", "scope", "clientId"],
@@ -145,13 +144,8 @@ const REQUIRED_FIELDS_BY_PROVIDER = {
   kilocode: ["apiBaseUrl", "initiateUrl", "pollUrlBase"],
   cline: ["appBaseUrl", "apiBaseUrl", "authorizeUrl", "tokenExchangeUrl", "refreshUrl"],
   clinepass: ["appBaseUrl", "apiBaseUrl", "authorizeUrl", "tokenExchangeUrl", "refreshUrl"],
-  "devin-desktop": [
-    "apiServerUrl",
-    "inferenceUrl",
-    "firebaseTokenUrl",
-    "ideName",
-    "defaultVersion",
-  ],
+  // prettier-ignore
+  "devin-desktop": ["apiServerUrl", "inferenceUrl", "firebaseTokenUrl", "ideName", "defaultVersion"],
   "devin-cli": ["apiServerUrl", "inferenceUrl", "firebaseTokenUrl", "ideName", "defaultVersion"],
   trae: ["apiEndpoint", "chatEndpoint", "webUrl"],
   // prettier-ignore
@@ -555,10 +549,8 @@ test("Antigravity runs mocked browser OAuth exchanges and post-exchange enrichme
     (_url, init: any = {}) => {
       assert.equal(init.method, "POST");
       assert.equal(init.headers.Authorization, "Bearer anti-access");
-      assert.match(
-        init.headers["User-Agent"],
-        /^antigravity\/2\.1\.1 [^ ]+\/[^ ]+ google-api-nodejs-client\/10\.3\.0$/
-      );
+      // prettier-ignore
+      assert.match(init.headers["User-Agent"], /^antigravity\/2\.1\.1 [^ ]+\/[^ ]+ google-api-nodejs-client\/10\.3\.0$/);
       assert.equal(init.headers["X-Goog-Api-Client"], "gl-node/22.21.1");
       assert.deepEqual(
         JSON.parse(String(init.body)).metadata,
