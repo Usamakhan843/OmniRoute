@@ -55,7 +55,11 @@ function capabilityEntry(limitContext: number | null) {
   };
 }
 
-function capabilityEntryWithLimits(limitInput: number | null, limitContext: number | null, limitOutput = 4096) {
+function capabilityEntryWithLimits(
+  limitInput: number | null,
+  limitContext: number | null,
+  limitOutput = 4096
+) {
   return {
     ...capabilityEntry(limitContext),
     limit_input: limitInput,

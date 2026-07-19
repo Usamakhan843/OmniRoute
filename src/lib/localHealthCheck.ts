@@ -38,7 +38,6 @@ function isBuildProcess(): boolean {
   return typeof process !== "undefined" && process.env.NEXT_PHASE === "phase-production-build";
 }
 
-
 // ── State (globalThis survives HMR re-evaluation) ───────────────────────
 
 declare global {

@@ -451,7 +451,12 @@ export function parseNotionInferenceStream(raw: string): string {
     applyNotionStreamLine(rawLine, state);
   }
 
-  const candidates = [state.lastRecordMap, state.lastPatchFinal, state.lastIncremental, state.lastLegacy]
+  const candidates = [
+    state.lastRecordMap,
+    state.lastPatchFinal,
+    state.lastIncremental,
+    state.lastLegacy,
+  ]
     .map(sanitizeNotionAssistantText)
     .filter(Boolean);
   // Prefer the longest non-empty candidate; record-map usually wins.
@@ -472,12 +477,8 @@ export function estimateNotionUsage(
     .map((m) => (typeof m?.content === "string" ? m.content : ""))
     .join("\n");
   // ~4 chars/token (English-ish); at least 1 when there is any text.
-  const prompt_tokens = promptText
-    ? Math.max(1, Math.ceil(promptText.length / 4))
-    : 0;
-  const completion_tokens = content
-    ? Math.max(1, Math.ceil(content.length / 4))
-    : 0;
+  const prompt_tokens = promptText ? Math.max(1, Math.ceil(promptText.length / 4)) : 0;
+  const completion_tokens = content ? Math.max(1, Math.ceil(content.length / 4)) : 0;
   return {
     prompt_tokens,
     completion_tokens,
@@ -486,20 +487,14 @@ export function estimateNotionUsage(
   };
 }
 
-function chatCompletionResponse(
-  content: string,
-  model: string,
-  messages?: NotionMessage[]
-) {
+function chatCompletionResponse(content: string, model: string, messages?: NotionMessage[]) {
   return new Response(
     JSON.stringify({
       id: `chatcmpl-notion-${Date.now()}`,
       object: "chat.completion",
       created: Math.floor(Date.now() / 1000),
       model,
-      choices: [
-        { index: 0, message: { role: "assistant", content }, finish_reason: "stop" },
-      ],
+      choices: [{ index: 0, message: { role: "assistant", content }, finish_reason: "stop" }],
       usage: estimateNotionUsage(messages, content),
     }),
     { status: 200, headers: { "Content-Type": "application/json" } }
@@ -659,7 +654,12 @@ async function sendNotionInferenceRequest(opts: {
   if (!upstream.ok) {
     const errText = await upstream.text().catch(() => "");
     return {
-      errorResult: makeErrorResult(upstream.status, `Notion error: ${errText}`, reqBody, NOTION_URL),
+      errorResult: makeErrorResult(
+        upstream.status,
+        `Notion error: ${errText}`,
+        reqBody,
+        NOTION_URL
+      ),
     };
   }
 
@@ -720,7 +720,11 @@ export class NotionWebExecutor extends BaseExecutor {
     const reqBody = buildNotionCreateThreadRequestBody({ spaceId, userId, threadId, transcript });
     const reqHeaders = buildNotionExecuteHeaders({ cookie, spaceId, userId });
 
-    const { rawText, errorResult } = await sendNotionInferenceRequest({ reqBody, reqHeaders, signal });
+    const { rawText, errorResult } = await sendNotionInferenceRequest({
+      reqBody,
+      reqHeaders,
+      signal,
+    });
     if (errorResult) return errorResult;
 
     const finalText = parseNotionInferenceStream(rawText || "");

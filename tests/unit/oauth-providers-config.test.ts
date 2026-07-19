@@ -696,10 +696,7 @@ test("Qwen and Kimi Coding execute mocked device-code flows and token mapping", 
       assert.equal(init.headers["X-Msh-Device-Id"], "test-kimi-device-id");
       assert.equal(init.headers["X-Msh-Os-Version"], os.release());
       if (os.type() === "Windows_NT") {
-        assert.equal(
-          init.headers["X-Msh-Device-Model"],
-          `Windows ${os.release()} ${os.arch()}`
-        );
+        assert.equal(init.headers["X-Msh-Device-Model"], `Windows ${os.release()} ${os.arch()}`);
       }
 
       return jsonResponse({

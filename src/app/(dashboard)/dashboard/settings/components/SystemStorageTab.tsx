@@ -1556,9 +1556,7 @@ export default function SystemStorageTab() {
             </select>
           </div>
         }
-        confirmText={
-          resetUsageLoading ? t("resetting") || "Resetting..." : t("reset") || "Reset"
-        }
+        confirmText={resetUsageLoading ? t("resetting") || "Resetting..." : t("reset") || "Reset"}
         variant="danger"
         loading={resetUsageLoading}
       />

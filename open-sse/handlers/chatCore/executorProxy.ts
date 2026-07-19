@@ -88,7 +88,10 @@ export async function resolveExecutorWithProxy(
     log?.info?.("UPSTREAM_PROXY", `${prov} routed through CLIProxyAPI (passthrough)`);
     const { dedicatedApiKey } = await loadCliproxyapiSettings();
     return wrapExecutorWithCliproxyapiCredentials(
-      wrapExecutorWithCliproxyapiModelMapping(getExecutor("cliproxyapi"), cfg.cliproxyapiModelMapping),
+      wrapExecutorWithCliproxyapiModelMapping(
+        getExecutor("cliproxyapi"),
+        cfg.cliproxyapiModelMapping
+      ),
       dedicatedApiKey
     );
   }
@@ -101,7 +104,10 @@ export async function resolveExecutorWithProxy(
   // #7645: the CLIProxyAPI retry leg must authenticate with the dedicated
   // key, never the native provider's own (already-failed) credential.
   const proxyExec = wrapExecutorWithCliproxyapiCredentials(
-    wrapExecutorWithCliproxyapiModelMapping(getExecutor("cliproxyapi"), cfg.cliproxyapiModelMapping),
+    wrapExecutorWithCliproxyapiModelMapping(
+      getExecutor("cliproxyapi"),
+      cfg.cliproxyapiModelMapping
+    ),
     dedicatedApiKey
   );
   const isRetryableStatus = (s: number) => fallbackCodes.includes(s) || s === 0;

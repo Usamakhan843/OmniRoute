@@ -446,7 +446,12 @@ export class GlmExecutor extends DefaultExecutor {
    */
   private async finalizeAnthropicTransportResult(
     input: ExecuteInput,
-    result: { response: Response; url: string; headers: Record<string, string>; transformedBody: unknown }
+    result: {
+      response: Response;
+      url: string;
+      headers: Record<string, string>;
+      transformedBody: unknown;
+    }
   ): Promise<GlmExecuteResult> {
     const { response: rawResponse, url, headers, transformedBody } = result;
     const clientHeaders = input.clientHeaders ?? {};

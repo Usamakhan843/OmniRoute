@@ -43,9 +43,8 @@ interface ApikeyMetaShape {
 
 const { REGISTRY } = await import("../../open-sse/config/providerRegistry.ts");
 const { getExecutor, DefaultExecutor } = await import("../../open-sse/executors/index.ts");
-const { AGGREGATOR_PROVIDER_IDS, providerAllowsOptionalApiKey } = await import(
-  "../../src/shared/constants/providers.ts"
-);
+const { AGGREGATOR_PROVIDER_IDS, providerAllowsOptionalApiKey } =
+  await import("../../src/shared/constants/providers.ts");
 const { APIKEY_PROVIDERS } = await import("../../src/shared/constants/providers/apikey/index.ts");
 
 const SUB_PATHS: Record<string, string> = {

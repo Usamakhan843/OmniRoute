@@ -22,8 +22,8 @@ export interface EngineMeta {
   id: string;
   label: string;
   stackPriority: number;
-  levels?: string[];        // intensity options; undefined = no level selector
-  isSingleMode: boolean;    // can be the effective mode when it is the only engine on
+  levels?: string[]; // intensity options; undefined = no level selector
+  isSingleMode: boolean; // can be the effective mode when it is the only engine on
   description: string;
   guidance: EngineGuidance;
 }

@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  GET,
-  OPTIONS,
-} from "../../../../src/app/api/v1/provider-plugin-manifest/route.ts";
+import { GET, OPTIONS } from "../../../../src/app/api/v1/provider-plugin-manifest/route.ts";
 
 test("provider plugin manifest returns a stable ETag with its cache policy", async () => {
   const response = await GET(new Request("http://localhost/api/v1/provider-plugin-manifest"));

@@ -608,9 +608,7 @@ export async function startLiveDashboardServer(
 // Build/test environments never auto-start regardless of the flag.
 
 function isBuildOrTest(): boolean {
-  return (
-    isBuildProcess() || isAutomatedTestProcess()
-  );
+  return isBuildProcess() || isAutomatedTestProcess();
 }
 
 export function isLiveWsEnabled(): boolean {

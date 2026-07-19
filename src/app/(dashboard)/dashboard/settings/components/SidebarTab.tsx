@@ -327,8 +327,8 @@ function GroupRow({
           </span>
         </button>
         <span className="text-xs text-text-muted/40">
-          {group.items.filter((i) => !isHideableSidebarItemId(i.id) || !hiddenSet.has(i.id)).length}/
-          {group.items.length}
+          {group.items.filter((i) => !isHideableSidebarItemId(i.id) || !hiddenSet.has(i.id)).length}
+          /{group.items.length}
         </span>
         {canToggleSeparator && (
           <div className="flex items-center gap-2 border-l border-border/60 pl-3">
@@ -458,9 +458,7 @@ export default function SidebarTab() {
     patch({ [HIDDEN_SIDEBAR_GROUP_LABELS_SETTING_KEY]: next, [SIDEBAR_PRESET_KEY]: null });
   };
 
-  const visibleSections = SIDEBAR_SECTIONS.filter(
-    (s) => s.visibility !== "debug" || showDebug
-  );
+  const visibleSections = SIDEBAR_SECTIONS.filter((s) => s.visibility !== "debug" || showDebug);
 
   const orderedSections = applySectionOrder(visibleSections, sectionOrder).map((s) => ({
     ...s,

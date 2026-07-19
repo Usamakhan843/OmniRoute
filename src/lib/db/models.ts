@@ -356,12 +356,8 @@ function normalizeSyncedAvailableModel(model: unknown): SyncedAvailableModel | n
       ? { supportsThinking: record.supportsThinking }
       : {}),
     ...(record.alwaysThinking === true ? { alwaysThinking: true } : {}),
-    ...(typeof record.supportsTools === "boolean"
-      ? { supportsTools: record.supportsTools }
-      : {}),
-    ...(typeof record.supportsVideo === "boolean"
-      ? { supportsVideo: record.supportsVideo }
-      : {}),
+    ...(typeof record.supportsTools === "boolean" ? { supportsTools: record.supportsTools } : {}),
+    ...(typeof record.supportsVideo === "boolean" ? { supportsVideo: record.supportsVideo } : {}),
     ...(record.supportsVision === true ? { supportsVision: true } : {}),
   };
 }

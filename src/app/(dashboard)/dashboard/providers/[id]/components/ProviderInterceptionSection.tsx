@@ -130,9 +130,7 @@ export default function ProviderInterceptionSection({
       <h2 className="text-base font-semibold text-text-main mb-1">
         {t("interceptionSectionTitle")}
       </h2>
-      <p className="text-xs text-text-muted mb-4 leading-relaxed">
-        {t("interceptionSectionHint")}
-      </p>
+      <p className="text-xs text-text-muted mb-4 leading-relaxed">{t("interceptionSectionHint")}</p>
       <div className="flex flex-col gap-4">
         <Toggle
           size="sm"

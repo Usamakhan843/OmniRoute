@@ -519,10 +519,7 @@ function sanitizeResponsesUsage(usage: unknown): unknown {
 
   const inputDetails = toRecord(normalized.input_tokens_details) || {};
   const cachedTokens = normalized.cached_tokens ?? normalized.cache_read_input_tokens;
-  if (
-    cachedTokens !== undefined &&
-    inputDetails.cached_tokens === undefined
-  ) {
+  if (cachedTokens !== undefined && inputDetails.cached_tokens === undefined) {
     inputDetails.cached_tokens = cachedTokens;
   }
   if (

@@ -267,8 +267,7 @@ export class VisionBridgeGuardrail extends BaseGuardrail {
     // "Missing API key" while the combo UI still showed body=zai. Fall through to
     // the image-describe path so the user's chosen model still answers.
     if (comboVisionBridgeDecision === "not-combo" && !forceVisionBridge) {
-      const checkCreds =
-        this.deps.hasUsableCredentials ?? hasUsableCredentialsForModel;
+      const checkCreds = this.deps.hasUsableCredentials ?? hasUsableCredentialsForModel;
       const originalUsable = await checkCreds(model);
 
       if (originalUsable === true) {

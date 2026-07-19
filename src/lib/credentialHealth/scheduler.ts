@@ -67,7 +67,6 @@ function isBuildProcess(): boolean {
   return typeof process !== "undefined" && process.env.NEXT_PHASE === "phase-production-build";
 }
 
-
 function isCredentialHealthCheckDisabled(): boolean {
   if (isBuildProcess() || isAutomatedTestProcess()) return true;
   const val = process.env.OMNIROUTE_DISABLE_CREDENTIAL_HEALTH_CHECK;

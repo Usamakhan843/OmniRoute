@@ -1236,7 +1236,9 @@ export class BaseExecutor {
         // to `:free` models only — no-op (and no extra work) for every other
         // OpenRouter request or provider.
         const openrouterFreeWindowAccountKey =
-          this.provider === "openrouter" && isFreeVariantModel(model) && activeCredentials.connectionId
+          this.provider === "openrouter" &&
+          isFreeVariantModel(model) &&
+          activeCredentials.connectionId
             ? resolveAccountKey(activeCredentials.connectionId, activeCredentials)
             : null;
         if (openrouterFreeWindowAccountKey) {

@@ -299,7 +299,11 @@ export function coerceToolSchemas(tools: unknown): unknown {
 // `null` (see pureHelpers.ts::isDroppableNullEntry). Scope: top-level
 // `properties[key].enum` only — does not recurse into `items`/`anyOf`/`oneOf` branches
 // (no real-world case beyond Agent.isolation is documented; extend with a concrete repro).
-function shouldInjectNullOmission(key: string, propSchema: unknown, required: Set<string>): boolean {
+function shouldInjectNullOmission(
+  key: string,
+  propSchema: unknown,
+  required: Set<string>
+): boolean {
   return (
     isPlainObject(propSchema) &&
     Array.isArray(propSchema.enum) &&

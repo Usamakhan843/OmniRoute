@@ -187,7 +187,8 @@ export const IMAGE_PROVIDERS: Record<string, ImageProviderConfig> = {
   "microsoft-designer-web": {
     id: "microsoft-designer-web",
     alias: "msdesigner",
-    baseUrl: "https://designerapp.officeapps.live.com/designerapp/DallE.ashx?action=GetDallEImagesCogSci",
+    baseUrl:
+      "https://designerapp.officeapps.live.com/designerapp/DallE.ashx?action=GetDallEImagesCogSci",
     authType: "apikey",
     authHeader: "bearer",
     format: "designer-web",

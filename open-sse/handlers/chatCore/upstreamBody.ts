@@ -26,7 +26,11 @@ import { sanitizeRequestForResolvedTarget } from "../../services/targetRequestSa
 type LoggerLike = { debug?: (...args: unknown[]) => void } | null | undefined;
 type Body = Record<string, unknown>;
 type CredentialsLike =
-  | { apiKey?: unknown; accessToken?: unknown; providerSpecificData?: Record<string, unknown> | null }
+  | {
+      apiKey?: unknown;
+      accessToken?: unknown;
+      providerSpecificData?: Record<string, unknown> | null;
+    }
   | null
   | undefined;
 
@@ -177,7 +181,12 @@ export async function prepareUpstreamBody(opts: {
   bodyToSend = truncateToolList(bodyToSend, provider, bypassDefaultToolLimit ?? false, log);
   bodyToSend = backfillQwenOAuthUser(bodyToSend, provider, credentials, log);
   const connectionCacheOverride = resolveConnectionCacheOverride(credentials?.providerSpecificData);
-  bodyToSend = await injectPromptCacheKey(bodyToSend, provider, targetFormat, connectionCacheOverride);
+  bodyToSend = await injectPromptCacheKey(
+    bodyToSend,
+    provider,
+    targetFormat,
+    connectionCacheOverride
+  );
 
   return bodyToSend;
 }

@@ -163,9 +163,7 @@ export function resolveSessionAffinityTtlMs(
 ): number {
   const override = Number(options.sessionAffinityTtlMs);
   if (Number.isFinite(override) && override > 0) return override;
-  const configured = Number(
-    settings.sessionAffinityTtlMs ?? settings.codexSessionAffinityTtlMs
-  );
+  const configured = Number(settings.sessionAffinityTtlMs ?? settings.codexSessionAffinityTtlMs);
   if (Number.isFinite(configured) && configured > 0) return configured;
   return 0;
 }

@@ -19,19 +19,18 @@ import assert from "node:assert/strict";
 //     node:test process without triggering side effects (DB init, fetch,
 //     etc.). We only need parseEffortLevel, which is a pure function. ───
 
-const { parseEffortLevel, OpencodeExecutor } = (await import(
-  "../../open-sse/executors/opencode.ts"
-)) as {
-  parseEffortLevel: (model: string) => { baseModel: string; effort: string } | null;
-  OpencodeExecutor: new (provider: string) => {
-    transformRequest: (
-      model: string,
-      body: Record<string, unknown>,
-      stream: boolean,
-      credentials: unknown
-    ) => Record<string, unknown>;
+const { parseEffortLevel, OpencodeExecutor } =
+  (await import("../../open-sse/executors/opencode.ts")) as {
+    parseEffortLevel: (model: string) => { baseModel: string; effort: string } | null;
+    OpencodeExecutor: new (provider: string) => {
+      transformRequest: (
+        model: string,
+        body: Record<string, unknown>,
+        stream: boolean,
+        credentials: unknown
+      ) => Record<string, unknown>;
+    };
   };
-};
 
 // ─── DeepSeek v4-pro: all 4 tiers ─────────────────────────────────────────
 
@@ -160,5 +159,9 @@ test("#6922 transformRequest: unaliased model passes through unchanged", () => {
   const out = executor.transformRequest("gpt-4o-mini", body, true, CREDENTIALS);
 
   assert.equal(out.model, "gpt-4o-mini", "unaliased model id is left untouched");
-  assert.equal(out.reasoning_effort, undefined, "no reasoning_effort is injected for a non-tier model");
+  assert.equal(
+    out.reasoning_effort,
+    undefined,
+    "no reasoning_effort is injected for a non-tier model"
+  );
 });

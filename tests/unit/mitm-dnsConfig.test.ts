@@ -44,15 +44,13 @@ let hostIsPresent = false;
 try {
   const hostsContent = fs.readFileSync("/etc/hosts", "utf8");
   const lines = hostsContent.split(/\r?\n/);
-  hostIsPresent = [`127.0.0.1 ${RM_TEST_HOST}`, `::1 ${RM_TEST_HOST}`].every(
-    (entry) => {
-      const [ip, host] = entry.split(/\s+/);
-      return lines.some((line) => {
-        const parts = line.trim().split(/\s+/).filter(Boolean);
-        return parts.length >= 2 && parts[0] === ip && parts.includes(host);
-      });
-    },
-  );
+  hostIsPresent = [`127.0.0.1 ${RM_TEST_HOST}`, `::1 ${RM_TEST_HOST}`].every((entry) => {
+    const [ip, host] = entry.split(/\s+/);
+    return lines.some((line) => {
+      const parts = line.trim().split(/\s+/).filter(Boolean);
+      return parts.length >= 2 && parts[0] === ip && parts.includes(host);
+    });
+  });
 } catch {
   // /etc/hosts not readable — treat as absent.
 }
@@ -79,7 +77,11 @@ function assertHostsWriteSpawn(call: { command: string; args: string[] }): void 
   if (call.command === "sudo") {
     assert.ok(call.args.includes("-S"), "sudo should use -S flag for password stdin");
   } else {
-    assert.equal(call.command, "tee", `unelevated write should invoke tee directly (got ${call.command})`);
+    assert.equal(
+      call.command,
+      "tee",
+      `unelevated write should invoke tee directly (got ${call.command})`
+    );
   }
 }
 

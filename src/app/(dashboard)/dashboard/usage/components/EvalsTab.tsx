@@ -1846,7 +1846,11 @@ export default function EvalsTab() {
   );
 }
 
-const HeroSection = memo(function HeroSection({ t }: { t: (key: string, values?: Record<string, unknown>) => string }) {
+const HeroSection = memo(function HeroSection({
+  t,
+}: {
+  t: (key: string, values?: Record<string, unknown>) => string;
+}) {
   return (
     <Card className="p-0 overflow-hidden">
       <div

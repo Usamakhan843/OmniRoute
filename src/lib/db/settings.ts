@@ -102,7 +102,9 @@ function withFamilyDefault(value: ProxyValue): ProxyValue {
 function applySessionAffinityLegacyFallback(settings: Record<string, unknown>): void {
   if (settings.sessionAffinityTtlMs === undefined) {
     settings.sessionAffinityTtlMs =
-      typeof settings.codexSessionAffinityTtlMs === "number" ? settings.codexSessionAffinityTtlMs : 0;
+      typeof settings.codexSessionAffinityTtlMs === "number"
+        ? settings.codexSessionAffinityTtlMs
+        : 0;
   }
 }
 

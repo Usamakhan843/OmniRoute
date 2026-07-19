@@ -225,10 +225,7 @@ export async function getModelInfo(modelStr) {
           parsed.model as string,
           matchedOpenAI.prefix
         );
-        const metadata = await lookupModelMeta(
-          matchedOpenAI.id as string,
-          normalizedModel
-        );
+        const metadata = await lookupModelMeta(matchedOpenAI.id as string, normalizedModel);
         return {
           provider: matchedOpenAI.id,
           model: normalizedModel,
@@ -247,10 +244,7 @@ export async function getModelInfo(modelStr) {
           parsed.model as string,
           matchedAnthropic.prefix
         );
-        const metadata = await lookupModelMeta(
-          matchedAnthropic.id as string,
-          normalizedModel
-        );
+        const metadata = await lookupModelMeta(matchedAnthropic.id as string, normalizedModel);
         return {
           provider: matchedAnthropic.id,
           model: normalizedModel,

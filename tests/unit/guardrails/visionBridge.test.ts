@@ -771,21 +771,11 @@ test("VB-CRED-02: does NOT reroute to a vision model known to lack credentials",
 });
 
 test("isProviderConnectionUsable rejects noauth without api key", async () => {
-  const { isProviderConnectionUsable } = await import(
-    "../../../src/lib/guardrails/visionBridge.ts"
-  );
-  assert.strictEqual(
-    isProviderConnectionUsable({ authType: "noauth", apiKey: null }),
-    false
-  );
-  assert.strictEqual(
-    isProviderConnectionUsable({ authType: "apikey", apiKey: "sk-real" }),
-    true
-  );
-  assert.strictEqual(
-    isProviderConnectionUsable({ authType: "oauth", refreshToken: "rt" }),
-    true
-  );
+  const { isProviderConnectionUsable } =
+    await import("../../../src/lib/guardrails/visionBridge.ts");
+  assert.strictEqual(isProviderConnectionUsable({ authType: "noauth", apiKey: null }), false);
+  assert.strictEqual(isProviderConnectionUsable({ authType: "apikey", apiKey: "sk-real" }), true);
+  assert.strictEqual(isProviderConnectionUsable({ authType: "oauth", refreshToken: "rt" }), true);
   assert.strictEqual(
     isProviderConnectionUsable({ authType: "apikey", apiKey: "x", testStatus: "banned" }),
     false

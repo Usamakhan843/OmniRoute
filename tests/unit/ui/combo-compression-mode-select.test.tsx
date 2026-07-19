@@ -42,9 +42,8 @@ async function flush() {
 
 describe("ComboCompressionModeSelect (#6760)", () => {
   it("hydrates the initial value from combo.config.compressionMode", async () => {
-    const { ComboCompressionModeSelect } = await import(
-      "../../../src/shared/components/compression/ComboCompressionModeSelect"
-    );
+    const { ComboCompressionModeSelect } =
+      await import("../../../src/shared/components/compression/ComboCompressionModeSelect");
     const combo = { id: "c1", config: { compressionMode: "lite" } };
     const container = mount(<ComboCompressionModeSelect combo={combo} />);
     await flush();
@@ -53,9 +52,8 @@ describe("ComboCompressionModeSelect (#6760)", () => {
   });
 
   it("hydrates from legacy combo.compressionOverride when config is absent", async () => {
-    const { ComboCompressionModeSelect } = await import(
-      "../../../src/shared/components/compression/ComboCompressionModeSelect"
-    );
+    const { ComboCompressionModeSelect } =
+      await import("../../../src/shared/components/compression/ComboCompressionModeSelect");
     const combo = { id: "c1", compressionOverride: "aggressive" };
     const container = mount(<ComboCompressionModeSelect combo={combo} />);
     await flush();
@@ -64,9 +62,8 @@ describe("ComboCompressionModeSelect (#6760)", () => {
   });
 
   it("PUTs the correct config payload to /api/combos/{id} on selection change", async () => {
-    const { ComboCompressionModeSelect } = await import(
-      "../../../src/shared/components/compression/ComboCompressionModeSelect"
-    );
+    const { ComboCompressionModeSelect } =
+      await import("../../../src/shared/components/compression/ComboCompressionModeSelect");
     const calls: Array<{ url: string; init?: RequestInit }> = [];
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
       calls.push({ url: input.toString(), init });
@@ -89,9 +86,8 @@ describe("ComboCompressionModeSelect (#6760)", () => {
   });
 
   it('selecting "Default" removes compressionMode from the PUT payload', async () => {
-    const { ComboCompressionModeSelect } = await import(
-      "../../../src/shared/components/compression/ComboCompressionModeSelect"
-    );
+    const { ComboCompressionModeSelect } =
+      await import("../../../src/shared/components/compression/ComboCompressionModeSelect");
     const calls: Array<{ init?: RequestInit }> = [];
     vi.spyOn(globalThis, "fetch").mockImplementation(async (_input, init) => {
       calls.push({ init });
@@ -111,9 +107,8 @@ describe("ComboCompressionModeSelect (#6760)", () => {
   });
 
   it("rolls back the displayed value when the PUT response is not OK", async () => {
-    const { ComboCompressionModeSelect } = await import(
-      "../../../src/shared/components/compression/ComboCompressionModeSelect"
-    );
+    const { ComboCompressionModeSelect } =
+      await import("../../../src/shared/components/compression/ComboCompressionModeSelect");
     vi.spyOn(globalThis, "fetch").mockImplementation(async () => {
       return new Response(JSON.stringify({ error: "nope" }), { status: 500 });
     });
@@ -130,9 +125,8 @@ describe("ComboCompressionModeSelect (#6760)", () => {
   });
 
   it("disables the control when disabled=true", async () => {
-    const { ComboCompressionModeSelect } = await import(
-      "../../../src/shared/components/compression/ComboCompressionModeSelect"
-    );
+    const { ComboCompressionModeSelect } =
+      await import("../../../src/shared/components/compression/ComboCompressionModeSelect");
     const combo = { id: "c1", config: { compressionMode: "lite" } };
     const container = mount(<ComboCompressionModeSelect combo={combo} disabled />);
     await flush();

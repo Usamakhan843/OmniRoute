@@ -33,7 +33,10 @@ const DESIGNER_WEB_BASE_URL =
 
 export class MicrosoftDesignerWebExecutor extends BaseExecutor {
   constructor() {
-    super("microsoft-designer-web", { id: "microsoft-designer-web", baseUrl: DESIGNER_WEB_BASE_URL });
+    super("microsoft-designer-web", {
+      id: "microsoft-designer-web",
+      baseUrl: DESIGNER_WEB_BASE_URL,
+    });
   }
 
   async execute(_input: ExecuteInput) {

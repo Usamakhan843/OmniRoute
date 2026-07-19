@@ -6,12 +6,7 @@ import {
   type ExecutorLog,
   type ProviderCredentials,
 } from "./base.ts";
-import {
-  PROVIDERS,
-  OAUTH_ENDPOINTS,
-  HTTP_STATUS,
-  FETCH_TIMEOUT_MS,
-} from "../config/constants.ts";
+import { PROVIDERS, OAUTH_ENDPOINTS, HTTP_STATUS, FETCH_TIMEOUT_MS } from "../config/constants.ts";
 import { scrubProxyAndFingerprintHeaders } from "../services/antigravityHeaderScrub.ts";
 import {
   antigravityNativeOAuthUserAgent,

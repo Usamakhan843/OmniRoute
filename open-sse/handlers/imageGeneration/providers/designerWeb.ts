@@ -167,7 +167,12 @@ async function stepDesignerWebPoll(
   const resp = await fetchImpl(baseUrl, { method: "POST", headers, body: formBody });
 
   if (!resp.ok) {
-    return { done: true, success: false, status: resp.status, error: sanitizeErrorMessage(await resp.text()) };
+    return {
+      done: true,
+      success: false,
+      status: resp.status,
+      error: sanitizeErrorMessage(await resp.text()),
+    };
   }
 
   const parsed = parseDesignerWebResponse(await resp.json());
@@ -238,11 +243,22 @@ export async function handleDesignerWebImageGeneration({
   const startTime = Date.now();
   const resolved = resolveDesignerWebRequest(body, credentials);
   if (!resolved.ok) {
-    return saveImageErrorResult({ provider, model, status: resolved.status, startTime, error: resolved.error });
+    return saveImageErrorResult({
+      provider,
+      model,
+      status: resolved.status,
+      startTime,
+      error: resolved.error,
+    });
   }
 
   try {
-    const outcome = await runDesignerWebPollLoop(providerConfig.baseUrl, resolved.config, fetchImpl, log);
+    const outcome = await runDesignerWebPollLoop(
+      providerConfig.baseUrl,
+      resolved.config,
+      fetchImpl,
+      log
+    );
     if (outcome.success) {
       return saveImageSuccessResult({
         provider,
@@ -254,7 +270,13 @@ export async function handleDesignerWebImageGeneration({
     if (log?.error) {
       log.error("IMAGE", `${provider} designer-web error ${outcome.status}: ${outcome.error}`);
     }
-    return saveImageErrorResult({ provider, model, status: outcome.status, startTime, error: outcome.error });
+    return saveImageErrorResult({
+      provider,
+      model,
+      status: outcome.status,
+      startTime,
+      error: outcome.error,
+    });
   } catch (err) {
     const errorText = sanitizeErrorMessage(err instanceof Error ? err.message : String(err));
     if (log?.error) {

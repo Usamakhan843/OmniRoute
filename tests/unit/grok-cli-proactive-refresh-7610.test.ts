@@ -1,7 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { GrokCliExecutor } from "../../open-sse/executors/grok-cli.ts";
-import type { ExecuteInput, ExecutorLog, ProviderCredentials } from "../../open-sse/executors/base.ts";
+import type {
+  ExecuteInput,
+  ExecutorLog,
+  ProviderCredentials,
+} from "../../open-sse/executors/base.ts";
 
 type TestableGrokCliExecutor = {
   execute: (input: ExecuteInput) => Promise<{ response: Response }>;

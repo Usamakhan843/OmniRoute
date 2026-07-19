@@ -117,10 +117,7 @@ function writeEffortValue(
 }
 
 /** Strip the effort field from every carrier that was present. */
-function stripEffortValue(
-  b: Record<string, unknown>,
-  c: EffortCarriers
-): Record<string, unknown> {
+function stripEffortValue(b: Record<string, unknown>, c: EffortCarriers): Record<string, unknown> {
   const next: Record<string, unknown> = { ...b };
   if (c.hasTopLevelReasoningEffort) delete next.reasoning_effort;
   if (c.hasReasoningEffort && c.reasoning) {

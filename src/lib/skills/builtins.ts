@@ -388,14 +388,7 @@ export const builtinSkills: Record<string, SkillHandler> = {
   },
 
   web_fetch: async (input, context) => {
-    const {
-      url,
-      format,
-      depth,
-      wait_for_selector,
-      include_metadata,
-      provider,
-    } = input as {
+    const { url, format, depth, wait_for_selector, include_metadata, provider } = input as {
       url: string;
       format?: "markdown" | "html" | "links" | "screenshot";
       depth?: 0 | 1 | 2;

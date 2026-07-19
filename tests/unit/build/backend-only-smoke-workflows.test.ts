@@ -78,7 +78,10 @@ test("npm-publish.yml 'Build CLI bundle (standalone app)' step must NOT be backe
   const publishJob = Object.values(doc.jobs).find((job) =>
     job.steps.some((s) => s.name === "Build CLI bundle (standalone app)")
   );
-  assert.ok(publishJob, "npm-publish.yml must have a job with a 'Build CLI bundle (standalone app)' step");
+  assert.ok(
+    publishJob,
+    "npm-publish.yml must have a job with a 'Build CLI bundle (standalone app)' step"
+  );
   const step = publishJob!.steps.find((s) => s.name === "Build CLI bundle (standalone app)")!;
   assert.equal(
     isBackendOnly(step),

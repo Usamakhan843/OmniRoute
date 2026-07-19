@@ -28,5 +28,9 @@ test("qwen device-code config uses chat.qwen.ai (not the 404ing bare qwen.ai)", 
 
 test("codebuddy-cn device-code sends platform as a query param (not body-only)", () => {
   const cb = read("src/lib/oauth/providers/codebuddy-cn.ts");
-  assert.match(cb, /\?platform=\$\{encodeURIComponent\(config\.platform\)\}/, "platform query param");
+  assert.match(
+    cb,
+    /\?platform=\$\{encodeURIComponent\(config\.platform\)\}/,
+    "platform query param"
+  );
 });

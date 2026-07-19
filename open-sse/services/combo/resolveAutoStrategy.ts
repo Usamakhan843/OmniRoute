@@ -1,8 +1,5 @@
 import { errorResponse, unavailableResponse } from "../../utils/error.ts";
-import {
-  BudgetExceededError,
-  selectProvider as selectAutoProvider,
-} from "../autoCombo/engine.ts";
+import { BudgetExceededError, selectProvider as selectAutoProvider } from "../autoCombo/engine.ts";
 import {
   resolveRequestModePack,
   parseRequestBudgetCap,
@@ -192,7 +189,11 @@ export async function resolveAutoStrategyOrder(
   // select-under-one-policy/rank-under-another bug this module's original fix
   // (parseAutoConfig honoring the combo's own stored modePack) set out to close.
   const weights = modePack ? getModePack(modePack) || configWeights : configWeights;
-  if (requestModePack.override || requestBudgetCap !== undefined || requestBudgetFallback !== undefined) {
+  if (
+    requestModePack.override ||
+    requestBudgetCap !== undefined ||
+    requestBudgetFallback !== undefined
+  ) {
     log.debug?.(
       "COMBO",
       `Auto strategy: per-request controls applied (mode=${

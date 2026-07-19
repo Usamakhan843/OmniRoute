@@ -38,7 +38,10 @@ test("microsoft-designer-web is registered in IMAGE_PROVIDERS with the designer-
 // --- Public credential (Hard Rule #11) ---------------------------------
 
 test("microsoft_designer_client_id embedded default decodes to the public Designer ClientId", () => {
-  assert.equal(resolvePublicCred("microsoft_designer_client_id"), "b5c2664a-7e9b-4a7a-8c9a-cd2c52dcf621");
+  assert.equal(
+    resolvePublicCred("microsoft_designer_client_id"),
+    "b5c2664a-7e9b-4a7a-8c9a-cd2c52dcf621"
+  );
 });
 
 test("designerWeb.ts never embeds the raw ClientId literal (Hard Rule #11)", () => {
@@ -85,7 +88,10 @@ test("buildDesignerWebFormBody encodes prompt, mapped size, fixed batch size, an
 
 test("parseDesignerWebResponse: ready state extracts thumbnail image URLs", () => {
   const parsed = parseDesignerWebResponse({
-    image_urls_thumbnail: [{ ImageUrl: "https://example.com/a.png" }, { ImageUrl: "https://example.com/b.png" }],
+    image_urls_thumbnail: [
+      { ImageUrl: "https://example.com/a.png" },
+      { ImageUrl: "https://example.com/b.png" },
+    ],
   });
   assert.equal(parsed.status, "ready");
   assert.deepEqual(parsed.imageUrls, ["https://example.com/a.png", "https://example.com/b.png"]);

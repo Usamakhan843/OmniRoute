@@ -226,8 +226,7 @@ export const PROVIDER_MODELS_CONFIG: Record<string, ProviderModelsConfigEntry> =
       if (token) out["x-api-key"] = token;
       return out;
     },
-    parseResponse: (data: any) =>
-      Array.isArray(data) ? data : (data?.data || data?.models || []),
+    parseResponse: (data: any) => (Array.isArray(data) ? data : data?.data || data?.models || []),
   },
   openai: {
     url: "https://api.openai.com/v1/models",

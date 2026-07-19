@@ -61,7 +61,10 @@ test("buildImagenPredictBody clamps sampleCount to [1,4] and defaults aspectRati
   assert.equal(buildImagenPredictBody({ prompt: "x", n: 99 }).parameters.sampleCount, 4);
   assert.equal(buildImagenPredictBody({ prompt: "x" }).parameters.aspectRatio, "1:1");
   // Native aspect ratio passes through.
-  assert.equal(buildImagenPredictBody({ prompt: "x", aspect_ratio: "9:16" }).parameters.aspectRatio, "9:16");
+  assert.equal(
+    buildImagenPredictBody({ prompt: "x", aspect_ratio: "9:16" }).parameters.aspectRatio,
+    "9:16"
+  );
 });
 
 test("parseImagenPredictResponse normalizes predictions[].bytesBase64Encoded to OpenAI shape", () => {

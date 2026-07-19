@@ -29,11 +29,7 @@ function loadLocale(locale: string): Record<string, unknown> {
   return JSON.parse(raw) as Record<string, unknown>;
 }
 
-function collectPlaceholderLeaves(
-  node: unknown,
-  pathPrefix: string,
-  out: string[]
-): void {
+function collectPlaceholderLeaves(node: unknown, pathPrefix: string, out: string[]): void {
   if (node === null || typeof node !== "object") {
     if (typeof node === "string" && node.startsWith(PLACEHOLDER_PREFIX)) {
       out.push(pathPrefix);

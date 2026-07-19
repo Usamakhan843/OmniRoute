@@ -81,9 +81,12 @@ export function CliproxyProviderExposureCard() {
             When enabled, discovered models appear in provider selects across OmniRoute.
           </p>
         </div>
-        <Toggle checked={data?.providerExpose ?? false} onChange={handleToggle} disabled={pending || !data} />
+        <Toggle
+          checked={data?.providerExpose ?? false}
+          onChange={handleToggle}
+          disabled={pending || !data}
+        />
       </div>
     </Card>
   );
 }
-

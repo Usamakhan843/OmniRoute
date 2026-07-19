@@ -810,7 +810,6 @@ function offloadLegacyCallLogDetails(db: SqliteDatabase) {
   }
 }
 
-
 function shouldRunStartupDbHealthCheck(): boolean {
   if (process.env.OMNIROUTE_FORCE_DB_HEALTHCHECK === "1") return true;
   return !isAutomatedTestProcess();

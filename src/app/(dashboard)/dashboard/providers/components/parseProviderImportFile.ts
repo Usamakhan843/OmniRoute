@@ -65,7 +65,13 @@ function pushParsedEntry(
   entries: ParsedProviderImportEntry[],
   errors: ProviderImportParseError[],
   lineNum: number,
-  raw: { provider?: unknown; name?: unknown; apiKey?: unknown; baseUrl?: unknown; priority?: unknown }
+  raw: {
+    provider?: unknown;
+    name?: unknown;
+    apiKey?: unknown;
+    baseUrl?: unknown;
+    priority?: unknown;
+  }
 ): void {
   const provider = typeof raw.provider === "string" ? raw.provider.trim() : "";
   const name = typeof raw.name === "string" ? raw.name.trim() : "";

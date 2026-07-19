@@ -100,10 +100,7 @@ test("Gemini -> OpenAI maps a thought:true part to reasoning_content instead of 
       contents: [
         {
           role: "model",
-          parts: [
-            { thought: true, text: "internal reasoning" },
-            { text: "final answer" },
-          ],
+          parts: [{ thought: true, text: "internal reasoning" }, { text: "final answer" }],
         },
       ],
     },
@@ -116,9 +113,7 @@ test("Gemini -> OpenAI maps a thought:true part to reasoning_content instead of 
   assert.equal(assistant.reasoning_content, "internal reasoning");
   // The visible content must not contain the thought text.
   const visibleText =
-    typeof assistant.content === "string"
-      ? assistant.content
-      : JSON.stringify(assistant.content);
+    typeof assistant.content === "string" ? assistant.content : JSON.stringify(assistant.content);
   assert.doesNotMatch(visibleText, /internal reasoning/);
   assert.match(visibleText, /final answer/);
 });

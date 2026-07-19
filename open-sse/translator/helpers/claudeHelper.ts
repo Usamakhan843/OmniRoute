@@ -9,10 +9,7 @@ import { getModelTargetFormat } from "../../config/providerModels.ts";
 // dispatching Claude-shape requests to these providers. Anthropic Claude and
 // other Claude-compatible upstreams that do accept it are unaffected.
 // Ported from upstream decolua/9router#820 by @hiepau1231.
-const CLAUDE_FORMAT_PROVIDERS_WITHOUT_OUTPUT_CONFIG = new Set<string>([
-  "minimax",
-  "minimax-cn",
-]);
+const CLAUDE_FORMAT_PROVIDERS_WITHOUT_OUTPUT_CONFIG = new Set<string>(["minimax", "minimax-cn"]);
 
 // Placeholder thinking text used as last-resort fallback when:
 //   - Target upstream is a non-Anthropic Claude-shape provider
@@ -464,7 +461,11 @@ export function prepareClaudeRequest(
               ? typeof b.data === "string" && (b.data as string).length > 0
               : typeof b.signature === "string" && b.signature.length > 0
         );
-        if (latestHasExistingThinking && supportsRedactedThinking && latestHasGenuineThinkingSignature) {
+        if (
+          latestHasExistingThinking &&
+          supportsRedactedThinking &&
+          latestHasGenuineThinkingSignature
+        ) {
           // Anthropic: skip all thinking-block rewrites entirely — the
           // blocks must remain verbatim (type, thinking, signature, data).
           continue;

@@ -39,7 +39,10 @@ test("handleImageGeneration(freepik): async submit+poll returns b64_json payload
   const originalFetch = globalThis.fetch;
   let pollCount = 0;
 
-  globalThis.fetch = (async (url: string, options: { headers?: Record<string, string>; body?: string } = {}) => {
+  globalThis.fetch = (async (
+    url: string,
+    options: { headers?: Record<string, string>; body?: string } = {}
+  ) => {
     const u = String(url);
 
     if (u === "https://api.freepik.com/v1/ai/mystic") {

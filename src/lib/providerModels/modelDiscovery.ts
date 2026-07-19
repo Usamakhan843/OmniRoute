@@ -145,12 +145,8 @@ export function normalizeDiscoveredModels(models: unknown): SyncedAvailableModel
         ? { supportsThinking: record.supportsThinking }
         : {}),
       ...(record.alwaysThinking === true ? { alwaysThinking: true } : {}),
-      ...(typeof record.supportsTools === "boolean"
-        ? { supportsTools: record.supportsTools }
-        : {}),
-      ...(typeof record.supportsVideo === "boolean"
-        ? { supportsVideo: record.supportsVideo }
-        : {}),
+      ...(typeof record.supportsTools === "boolean" ? { supportsTools: record.supportsTools } : {}),
+      ...(typeof record.supportsVideo === "boolean" ? { supportsVideo: record.supportsVideo } : {}),
       ...(supportsVision ? { supportsVision: true } : {}),
     });
   }

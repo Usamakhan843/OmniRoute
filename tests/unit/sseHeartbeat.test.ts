@@ -33,7 +33,10 @@ test("sseCommentsEnabled is false only when set to 'off' (case-insensitive)", ()
 test("shapeForClientFormat maps known client formats", () => {
   assert.equal(shapeForClientFormat("claude"), HEARTBEAT_SHAPES.ANTHROPIC_PING);
   assert.equal(shapeForClientFormat("openai"), HEARTBEAT_SHAPES.OPENAI_CHUNK);
-  assert.equal(shapeForClientFormat("openai-responses"), HEARTBEAT_SHAPES.OPENAI_RESPONSES_IN_PROGRESS);
+  assert.equal(
+    shapeForClientFormat("openai-responses"),
+    HEARTBEAT_SHAPES.OPENAI_RESPONSES_IN_PROGRESS
+  );
   assert.equal(shapeForClientFormat(undefined), HEARTBEAT_SHAPES.COMMENT);
 });
 

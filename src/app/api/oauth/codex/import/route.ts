@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { normalizeCodexImportRecord, flattenCodexImportPayload } from "@/lib/oauth/services/codexImport";
+import {
+  normalizeCodexImportRecord,
+  flattenCodexImportPayload,
+} from "@/lib/oauth/services/codexImport";
 import { createProviderConnection } from "@/models";
 import { isAuthRequired, isAuthenticated } from "@/shared/utils/apiAuth";
 import { sanitizeErrorMessage } from "@omniroute/open-sse/utils/error.ts";
-import { refreshCodexToken, isUnrecoverableRefreshError } from "@omniroute/open-sse/services/tokenRefresh.ts";
+import {
+  refreshCodexToken,
+  isUnrecoverableRefreshError,
+} from "@omniroute/open-sse/services/tokenRefresh.ts";
 
 /**
  * Message returned when the imported record's refresh_token is already dead
@@ -29,9 +35,10 @@ const EXPIRED_SESSION_MESSAGE =
  * error string when the refresh_token is confirmed dead and the import
  * should be rejected.
  */
-async function validateCodexRefreshToken(
-  payload: { accessToken: string; refreshToken: string },
-): Promise<string | null> {
+async function validateCodexRefreshToken(payload: {
+  accessToken: string;
+  refreshToken: string;
+}): Promise<string | null> {
   let refreshResult: unknown;
   try {
     refreshResult = await refreshCodexToken(payload.refreshToken, undefined, null);
@@ -96,17 +103,14 @@ export async function POST(request: Request) {
   try {
     rawBody = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid or empty JSON body" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid or empty JSON body" }, { status: 400 });
   }
 
   const parsed = bodySchema.safeParse(rawBody);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.errors[0]?.message ?? "Invalid request body" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -115,10 +119,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: flat.error }, { status: 400 });
   }
   if (flat.records.length === 0) {
-    return NextResponse.json(
-      { error: "No accounts found in payload" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "No accounts found in payload" }, { status: 400 });
   }
 
   const results: Array<

@@ -45,13 +45,10 @@ test("agentrouter discovery parseResponse maps an OpenAI-style model list", () =
       { id: "glm-5.1", object: "model", owned_by: "zhipu" },
     ],
   });
-  assert.deepEqual(
-    models,
-    [
-      { id: "claude-opus-4-6", object: "model", owned_by: "anthropic" },
-      { id: "glm-5.1", object: "model", owned_by: "zhipu" },
-    ]
-  );
+  assert.deepEqual(models, [
+    { id: "claude-opus-4-6", object: "model", owned_by: "anthropic" },
+    { id: "glm-5.1", object: "model", owned_by: "zhipu" },
+  ]);
 
   // Tolerant of the alternate `models` envelope shape too.
   assert.deepEqual(cfg.parseResponse!({ models: [{ id: "deepseek-v3.2" }] }), [

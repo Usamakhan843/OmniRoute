@@ -11,9 +11,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const { GeminiWebExecutor, buildGeminiToolResponse, buildGeminiToolPrompt } = await import(
-  "../../open-sse/executors/gemini-web.ts"
-);
+const { GeminiWebExecutor, buildGeminiToolResponse, buildGeminiToolPrompt } =
+  await import("../../open-sse/executors/gemini-web.ts");
 
 interface ToolCallLike {
   function: { name: string; arguments: string };
@@ -238,8 +237,7 @@ async function withMockedGeminiBrowser<T>(
 }
 
 test("#7286: executor integration — tools[] present reaches tool_calls end to end", async () => {
-  const responseText =
-    '<tool>{"name":"get_weather","arguments":{"city":"Berlin"}}</tool>';
+  const responseText = '<tool>{"name":"get_weather","arguments":{"city":"Berlin"}}</tool>';
 
   await withMockedGeminiBrowser(responseText, async () => {
     const executor = new GeminiWebExecutor();

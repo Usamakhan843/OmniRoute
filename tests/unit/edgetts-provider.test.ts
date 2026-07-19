@@ -100,10 +100,7 @@ test("buildSpeechConfigMessage frames a valid speech.config WS text message", ()
   assert.match(msg, /Path:speech\.config\r\n\r\n/);
   const jsonPart = msg.slice(msg.indexOf("\r\n\r\n") + 4);
   const parsed = JSON.parse(jsonPart);
-  assert.equal(
-    parsed.context.synthesis.audio.outputFormat,
-    "audio-24khz-48kbitrate-mono-mp3"
-  );
+  assert.equal(parsed.context.synthesis.audio.outputFormat, "audio-24khz-48kbitrate-mono-mp3");
 });
 
 test("buildSsmlMessage frames a valid ssml WS text message carrying the SSML body", () => {
@@ -275,7 +272,10 @@ test("handleEdgeTtsSpeech returns a sanitized 502 on upstream WS failure (Hard R
   assert.equal(response.status, 502);
   const bodyJson = await response.json();
   assert.ok(bodyJson.error.message.includes("ECONNREFUSED"));
-  assert.ok(!bodyJson.error.message.includes("/home/user/secret"), "must not leak a filesystem path");
+  assert.ok(
+    !bodyJson.error.message.includes("/home/user/secret"),
+    "must not leak a filesystem path"
+  );
   assert.ok(!bodyJson.error.message.includes("at /"), "must not leak a stack trace frame");
 });
 

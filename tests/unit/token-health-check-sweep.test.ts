@@ -66,8 +66,7 @@ test.after(async () => {
 /** Read the shared health-check global state's `sweeping` flag. */
 function isSweeping(): boolean {
   const hc = (globalThis as Record<string, unknown>).__omnirouteTokenHC as
-    | { sweeping?: boolean }
-    | undefined;
+    { sweeping?: boolean } | undefined;
   return hc?.sweeping ?? false;
 }
 

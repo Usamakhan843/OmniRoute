@@ -279,8 +279,7 @@ export const APIKEY_PROVIDERS_GATEWAYS = {
     textIcon: "G4F",
     website: "https://g4f.space",
     hasFree: true,
-    freeNote:
-      "Free no-key reverse proxy to Groq (gpt4free project) — rate-limited to 5 req/min.",
+    freeNote: "Free no-key reverse proxy to Groq (gpt4free project) — rate-limited to 5 req/min.",
     passthroughModels: true,
     authHint:
       "No auth required. Free tier is limited to 5 requests/minute — sign up at g4f.dev/members.html for higher limits.",
@@ -294,8 +293,7 @@ export const APIKEY_PROVIDERS_GATEWAYS = {
     textIcon: "G4F",
     website: "https://g4f.space",
     hasFree: true,
-    freeNote:
-      "Free no-key reverse proxy to Gemini (gpt4free project) — rate-limited to 5 req/min.",
+    freeNote: "Free no-key reverse proxy to Gemini (gpt4free project) — rate-limited to 5 req/min.",
     passthroughModels: true,
     authHint:
       "No auth required. Free tier is limited to 5 requests/minute — sign up at g4f.dev/members.html for higher limits.",
@@ -324,8 +322,7 @@ export const APIKEY_PROVIDERS_GATEWAYS = {
     textIcon: "G4F",
     website: "https://g4f.space",
     hasFree: true,
-    freeNote:
-      "Free no-key hosted Ollama gateway (gpt4free project) — rate-limited to 5 req/min.",
+    freeNote: "Free no-key hosted Ollama gateway (gpt4free project) — rate-limited to 5 req/min.",
     passthroughModels: true,
     authHint:
       "No auth required. Free tier is limited to 5 requests/minute — sign up at g4f.dev/members.html for higher limits.",

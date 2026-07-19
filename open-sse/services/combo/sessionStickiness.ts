@@ -82,9 +82,7 @@ interface StickyEntry {
  * Injectable saturation fetcher seam (for unit tests).
  * Returns HeadroomSaturation or undefined when unknown.
  */
-export type SaturationFetcher = (
-  connectionId: string
-) => Promise<HeadroomSaturation | undefined>;
+export type SaturationFetcher = (connectionId: string) => Promise<HeadroomSaturation | undefined>;
 
 // ─── Saturation fetcher seam ─────────────────────────────────────────────────
 
@@ -184,9 +182,7 @@ export type QuotaExhaustionChecker = (connectionId: string) => boolean;
 let _quotaExhaustionOverride: QuotaExhaustionChecker | null = null;
 
 /** Test-only: inject the quota-exhaustion checker; pass null to restore default. */
-export function __setStickinessQuotaCheckerForTests(
-  checker: QuotaExhaustionChecker | null
-): void {
+export function __setStickinessQuotaCheckerForTests(checker: QuotaExhaustionChecker | null): void {
   _quotaExhaustionOverride = checker;
 }
 

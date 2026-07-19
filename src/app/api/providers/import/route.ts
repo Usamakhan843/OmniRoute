@@ -10,7 +10,10 @@ import {
   getProviderNodeById,
   isCloudEnabled,
 } from "@/models";
-import { isAnthropicCompatibleProvider, isOpenAICompatibleProvider } from "@/shared/constants/providers";
+import {
+  isAnthropicCompatibleProvider,
+  isOpenAICompatibleProvider,
+} from "@/shared/constants/providers";
 import { isManagedProviderConnectionId } from "@/lib/providers/catalog";
 import { getConsistentMachineId } from "@/shared/utils/machineId";
 import { resolveBulkNameCollisions } from "@/shared/utils/bulkApiKeyParser";
@@ -164,7 +167,10 @@ async function resolveImportNameCollisions(entries: ImportEntry[]): Promise<Impo
     const resolvedProviderEntries = resolveBulkNameCollisions(providerEntries, existingNames);
 
     indices.forEach((originalIndex, i) => {
-      resolved[originalIndex] = { ...entries[originalIndex], name: resolvedProviderEntries[i].name };
+      resolved[originalIndex] = {
+        ...entries[originalIndex],
+        name: resolvedProviderEntries[i].name,
+      };
     });
   }
 
@@ -215,7 +221,12 @@ export async function POST(request: Request) {
     try {
       const result = await importOneEntry(entry, !!validateKeys);
       if ("error" in result) {
-        errors.push({ index: i, name: entry.name, provider: entry.provider, message: result.error });
+        errors.push({
+          index: i,
+          name: entry.name,
+          provider: entry.provider,
+          message: result.error,
+        });
         continue;
       }
       created.push(result.created);

@@ -456,7 +456,11 @@ test("getProviderConnections rejects column names outside the real provider_conn
   // A mix of valid + invalid columns must still reject (fail-closed, not a
   // silent partial projection).
   await assert.rejects(
-    () => providersDb.getProviderConnections({}, ["id", "provider; DROP TABLE provider_connections; --"]),
+    () =>
+      providersDb.getProviderConnections({}, [
+        "id",
+        "provider; DROP TABLE provider_connections; --",
+      ]),
     /invalid column/i
   );
 
