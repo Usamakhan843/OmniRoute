@@ -32,21 +32,14 @@ import {
   redactProxySecrets,
 } from "./proxies/mappers";
 import { isGlobalProxyEnabled, PROXY_ALIVE_PREDICATE } from "./proxies/guards";
+import { bumpProxyRegistryGeneration } from "./proxies/registryGeneration";
 export {
   hasBlockingProxyAssignment,
   hasBlockingProxyAssignmentForProvider,
 } from "./proxies/guards";
 export { extractRelayAuth, redactProxySecrets } from "./proxies/mappers";
-
-let proxyRegistryGeneration = 0;
-
-function bumpProxyRegistryGeneration() {
-  proxyRegistryGeneration++;
-}
-
-export function getProxyRegistryGeneration() {
-  return proxyRegistryGeneration;
-}
+export { addProxiesToScopePool } from "./proxySubscriptions";
+export { bumpProxyRegistryGeneration, getProxyRegistryGeneration } from "./proxies/registryGeneration";
 
 // Mutate legacy proxyConfig rows directly so these writes stay inside the same
 // SQLite transaction as the proxy registry row and assignment upsert.
@@ -120,8 +113,8 @@ function insertProxyRow(
 ) {
   db.prepare(
     `INSERT INTO proxy_registry
-      (id, name, type, host, port, username, password, region, notes, status, source, family, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (id, name, type, host, port, username, password, region, notes, status, source, family, subscription_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id,
     payload.name,
@@ -135,6 +128,7 @@ function insertProxyRow(
     payload.status || "active",
     payload.source || "manual",
     payload.family || "auto",
+    payload.subscriptionId ?? null,
     now,
     now
   );
@@ -158,12 +152,16 @@ function updateProxyRow(
     // Omitted credentials mean preserve; explicitly provided blanks clear stored auth.
     username: incomingUsername === undefined ? existing.username : incomingUsername,
     password: incomingPassword === undefined ? existing.password : incomingPassword,
+    // subscription_id: only override when the caller explicitly passes it (string|null);
+    // otherwise preserve whatever the existing row already carries.
+    subscriptionId:
+      payload.subscriptionId === undefined ? existing.subscriptionId : payload.subscriptionId,
     updatedAt: now,
   };
 
   db.prepare(
     `UPDATE proxy_registry
-       SET name = ?, type = ?, host = ?, port = ?, username = ?, password = ?, region = ?, notes = ?, status = ?, source = ?, family = ?, updated_at = ?
+       SET name = ?, type = ?, host = ?, port = ?, username = ?, password = ?, region = ?, notes = ?, status = ?, source = ?, family = ?, subscription_id = ?, updated_at = ?
      WHERE id = ?`
   ).run(
     merged.name,
@@ -177,6 +175,7 @@ function updateProxyRow(
     merged.status || "active",
     merged.source || "manual",
     merged.family || "auto",
+    merged.subscriptionId ?? null,
     merged.updatedAt,
     id
   );
@@ -242,7 +241,7 @@ export async function listProxies(options?: { includeSecrets?: boolean }) {
   const db = getDbInstance();
   const rows = db
     .prepare(
-      "SELECT id, name, type, host, port, username, password, region, notes, status, source, family, created_at, updated_at FROM proxy_registry ORDER BY datetime(updated_at) DESC, name ASC"
+      "SELECT id, name, type, host, port, username, password, region, notes, status, source, family, subscription_id, created_at, updated_at FROM proxy_registry ORDER BY datetime(updated_at) DESC, name ASC"
     )
     .all();
 
@@ -263,7 +262,7 @@ function getProxyRowById(
   const includeSecrets = options?.includeSecrets === true;
   const row = db
     .prepare(
-      "SELECT id, name, type, host, port, username, password, region, notes, status, source, family, created_at, updated_at FROM proxy_registry WHERE id = ?"
+      "SELECT id, name, type, host, port, username, password, region, notes, status, source, family, subscription_id, created_at, updated_at FROM proxy_registry WHERE id = ?"
     )
     .get(id);
   if (!row) return null;
@@ -595,6 +594,9 @@ export async function addProxyToScopePool(
     .get(normalizedScope, normalizedScopeId, proxyId);
   return row ? mapAssignmentRow(row) : null;
 }
+
+// addProxiesToScopePool moved to ./proxySubscriptions.ts to keep this file under
+// the frozen size cap; re-exported below for existing callers.
 
 /**
  * Remove one proxy from a scope's pool (#6365). Returns true if a row was deleted.
