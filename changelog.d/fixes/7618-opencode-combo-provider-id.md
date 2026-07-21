@@ -1,0 +1,1 @@
+- fix(plugin): publish OpenCode dynamic combo/model catalog entries under the registered `opencode-*` provider id, then rewrite outbound OmniRoute request `model` prefixes back to the server-facing provider id so custom combos no longer fail OpenCode auth with `No active credentials for provider: omniroute` (#7618).
