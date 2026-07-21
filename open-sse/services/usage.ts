@@ -9,6 +9,7 @@ import { fetchDeepseekQuota, type DeepseekQuota } from "./deepseekQuotaFetcher.t
 import { fetchOpencodeQuota, type OpencodeTripleWindowQuota } from "./opencodeQuotaFetcher.ts";
 import { getOllamaCloudUsage, getOpenCodeGoUsage } from "./opencodeOllamaUsage.ts";
 import { getCodeBuddyCnUsage } from "./usage/codebuddy-cn.ts";
+import { getHyperAgentUsage } from "./usage/hyperagent.ts";
 import {
   extractCodeAssistOnboardTierId,
   extractCodeAssistSubscriptionTier,
@@ -539,6 +540,9 @@ export const USAGE_FETCHER_PROVIDERS = [
   "vertex",
   "vertex-partner",
   "codebuddy-cn",
+  // HyperAgent billing usage (creditBlocks USD)
+  "hyperagent",
+  "ha",
 ] as const;
 
 export type UsageFetcherProvider = (typeof USAGE_FETCHER_PROVIDERS)[number];
@@ -621,6 +625,9 @@ export async function getUsageForProvider(
       return await getXaiUsage(id || "");
     case "codebuddy-cn":
       return await getCodeBuddyCnUsage(accessToken, apiKey, providerSpecificData);
+    case "hyperagent":
+    case "ha":
+      return await getHyperAgentUsage(apiKey || accessToken, providerSpecificData);
     default:
       return { message: `Usage API not implemented for ${provider}` };
   }

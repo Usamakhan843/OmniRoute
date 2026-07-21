@@ -416,6 +416,8 @@ export const USAGE_SUPPORTED_PROVIDERS = [
   "vertex",
   "vertex-partner",
   "codebuddy-cn",
+  "hyperagent",
+  "ha",
 ];
 
 // ── Zod validation at module load (Phase 7.2) ──
