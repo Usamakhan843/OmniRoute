@@ -877,7 +877,7 @@ test("checkFallbackError preserves OAuth 429 daily quota semantics", () => {
 });
 
 // ModelScope daily quota lockout tests (commit 0456a1f5)
-test("recordModelLockoutFailure caps quota_exhausted cooldown against maxCooldownMs (default 2min)", () => {
+test("recordModelLockoutFailure sets cooldown until tomorrow 0:00 for quota_exhausted reason", () => {
   const originalNow = Date.now;
   // Use a fixed local time (noon) to ensure predictable results
   const testDate = new Date();
@@ -895,6 +895,12 @@ test("recordModelLockoutFailure caps quota_exhausted cooldown against maxCooldow
 
     const profile = makeProfile();
 
+    // Calculate milliseconds until tomorrow 00:00 local time
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const expectedMsUntilTomorrow = tomorrow.getTime() - now;
+
     // Record failure with quota_exhausted reason
     const result = recordModelLockoutFailure(
       provider,
@@ -906,14 +912,12 @@ test("recordModelLockoutFailure caps quota_exhausted cooldown against maxCooldow
       profile
     );
 
-    // Verify the cooldown is capped at BACKOFF_CONFIG.max (2min) when no
-    // maxCooldownMs is explicitly provided — not frozen until midnight.
-    // This is the fix for #7940: user-configured caps are honored.
+    // Verify the cooldown is set to ms until tomorrow 0:00 (with tolerance)
+    const diff = Math.abs(result.cooldownMs - expectedMsUntilTomorrow);
     assert.ok(
-      result.cooldownMs <= 120_000,
-      `cooldown should be capped at 2min default (got ${result.cooldownMs}ms)`
+      diff <= 300_000,
+      `cooldown should be ms until tomorrow 0:00 (expected ${expectedMsUntilTomorrow}ms, got ${result.cooldownMs}ms, diff ${diff}ms)`
     );
-    assert.ok(result.cooldownMs > 0, "cooldown should be positive");
 
     // Verify model is locked
     assert.equal(isModelLocked(provider, connectionId, model), true);
@@ -1263,8 +1267,7 @@ test("Gemini RPM 429: recordModelLockoutFailure uses exponential backoff for rat
   }
 });
 
-test("Gemini RPD (quota_exhausted) is capped against maxCooldownMs per #7940", () => {
-  // #7940 fix: quota_exhausted lockouts are now capped against maxCooldownMs
+test("Gemini RPD (quota_exhausted) still triggers midnight lockout in recordModelLockoutFailure", () => {
   const originalNow = Date.now;
   const testDate = new Date();
   testDate.setHours(12, 0, 0, 0);
@@ -1287,12 +1290,15 @@ test("Gemini RPD (quota_exhausted) is capped against maxCooldownMs per #7940", (
       profile
     );
 
-    // Must be capped at BACKOFF_CONFIG.max (2min), NOT midnight
+    // Must lock until midnight, NOT exponential backoff
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const expected = tomorrow.getTime() - now;
     assert.ok(
-      result.cooldownMs <= 120_000,
-      `cooldown should be capped at 2min default (got ${result.cooldownMs}ms)`
+      Math.abs(result.cooldownMs - expected) <= 300_000,
+      `cooldown should be until tomorrow (expected ~${expected}, got ${result.cooldownMs})`
     );
-    assert.ok(result.cooldownMs > 0, "cooldown should be positive");
     clearModelLock(provider, connectionId, model);
   } finally {
     Date.now = originalNow;

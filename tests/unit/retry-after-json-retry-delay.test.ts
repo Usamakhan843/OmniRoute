@@ -43,14 +43,14 @@ describe("parseRetryHintFromJsonBody — Google Gemini retryDelay", () => {
     assert.strictEqual(result, null);
   });
 
-  it("respects maxMs cap when retryDelay exceeds it", () => {
+  it("caps retryDelay to maxMs when retryDelay exceeds it", () => {
     const body = JSON.stringify({
       error: {
         details: [{ retryDelay: "600s" }],
       },
     });
     const result = parseRetryHintFromJsonBody(body, 60_000);
-    assert.strictEqual(result, null);
+    assert.strictEqual(result, 60_000);
   });
 
   it("parses retryDelay within maxMs boundary", () => {

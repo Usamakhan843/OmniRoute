@@ -93,7 +93,7 @@ export function parseRetryHintFromJsonBody(body: string, maxMs: number): number 
   for (const detail of details) {
     if (detail && typeof detail === "object") {
       const delay = parseGoDuration((detail as JsonRecord).retryDelay);
-      if (delay !== null && delay > 0 && delay <= maxMs) return delay;
+      if (delay !== null && delay > 0) return Math.min(delay, maxMs);
     }
   }
 

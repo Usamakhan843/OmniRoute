@@ -77,8 +77,8 @@ describe("recordModelLockoutFailure — exactCooldownMs cap against maxCooldownM
       { exactCooldownMs: 300_000 }
     );
 
-    // When maxCooldownMs is not passed, BACKOFF_CONFIG.max (120000 = 2min) is used
-    // exactCooldownMs=300000 should be capped to 120000
-    assert.ok(result.cooldownMs <= 120_000, `cooldownMs=${result.cooldownMs} should be <= 120000`);
+    // When maxCooldownMs is not passed, exact cooldowns are not capped
+    // so exactCooldownMs=300000 should be preserved as-is
+    assert.strictEqual(result.cooldownMs, 300_000);
   });
 });
