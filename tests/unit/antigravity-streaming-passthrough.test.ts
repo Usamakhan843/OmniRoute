@@ -1,6 +1,7 @@
 // Antigravity streaming-passthrough behavior (#7408): the buffered non-streaming
-// response path and the credits-extraction pass-through TransformStream. Kept
-// separate from executor-antigravity.test.ts to respect its frozen file-size cap.
+// path returns collected JSON, while credits extraction remains a pass-through
+// TransformStream. Kept separate from executor-antigravity.test.ts to respect
+// its frozen file-size cap.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
@@ -9,8 +10,8 @@ import {
   createCreditsExtractionTransform,
 } from "../../open-sse/executors/antigravity.ts";
 import {
-  clearAntigravityVersionCache,
-  seedAntigravityVersionCache,
+  clearAntigravityVersionCaches,
+  seedAntigravityIdeVersionCache,
 } from "../../open-sse/services/antigravityVersion.ts";
 
 type ChatCompletionPayload = {
@@ -27,15 +28,15 @@ type ChatCompletionPayload = {
 };
 
 test.afterEach(() => {
-  clearAntigravityVersionCache();
+  clearAntigravityVersionCaches();
 });
 
-test("AntigravityExecutor.execute auto-retries short 429 responses and collects SSE for non-stream clients", async () => {
+test("AntigravityExecutor.execute auto-retries short 429 responses and collects JSON for non-stream clients", async () => {
   const executor = new AntigravityExecutor();
   const originalFetch = globalThis.fetch;
   const originalSetTimeout = globalThis.setTimeout;
   const calls = [];
-  seedAntigravityVersionCache("2026.04.17-test");
+  seedAntigravityIdeVersionCache("2026.04.17-test");
 
   globalThis.fetch = async (url) => {
     calls.push(String(url));
