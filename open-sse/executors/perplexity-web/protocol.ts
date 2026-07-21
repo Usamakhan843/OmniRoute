@@ -38,6 +38,11 @@ export const PPLX_SUPPORTED_BLOCK_USE_CASES = [
   "inline_claims",
   "unified_assets",
   "workflow_steps",
+  // Live www.perplexity.ai (Chrome 150 / API v2.18) also advertises these —
+  // omitting them can push multi-step / copilot streams into shapes without
+  // a materialized markdown answer (empty content).
+  "workflow_widgets",
+  "navigation_results",
   "background_agents",
 ];
 // Firefox 148 — must match the `firefox_148` TLS profile used by perplexityTlsClient.
@@ -45,25 +50,31 @@ export const PPLX_SUPPORTED_BLOCK_USE_CASES = [
 export const PPLX_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:148.0) Gecko/20100101 Firefox/148.0";
 
+// Live client uses mode "copilot" for advanced models (Sonnet/Opus/GPT/etc.) and
+// "copilot"+"turbo" for the default Sonar path. "search" is retained only for the
+// generic auto/pro preference. Wrong mode was a root cause of empty-content
+// streams that never materialize ask_text markdown blocks.
 export const MODEL_MAP: Record<string, [string, string]> = {
-  "pplx-auto": ["search", "pplx_pro"],
-  "pplx-sonar": ["search", "experimental"],
-  "pplx-gpt-5.4": ["search", "gpt54"],
-  "pplx-gpt": ["search", "gpt55"],
-  "pplx-gemini": ["search", "gemini31pro_high"],
-  "pplx-sonnet": ["search", "claude50sonnet"],
-  "pplx-opus": ["search", "claude48opus"],
-  "pplx-glm": ["search", "glm_5_2"],
-  "pplx-kimi": ["search", "kimik26instant"],
-  "pplx-nemotron": ["search", "nv_nemotron_3_ultra"],
+  "pplx-auto": ["copilot", "pplx_pro"],
+  "pplx-sonar": ["copilot", "turbo"],
+  "pplx-gpt-5.6-terra": ["copilot", "gpt56_terra"],
+  "pplx-gpt-5.6-sol": ["copilot", "gpt56_sol"],
+  "pplx-gemini": ["copilot", "gemini31pro_high"],
+  "pplx-sonnet": ["copilot", "claude50sonnet"],
+  "pplx-opus": ["copilot", "claude48opus"],
+  "pplx-glm": ["copilot", "glm_5_2"],
+  "pplx-kimi": ["copilot", "kimik26instant"],
+  "pplx-grok-4.5": ["copilot", "grok45low"],
+  "pplx-nemotron": ["copilot", "nv_nemotron_3_ultra"],
 };
 
 export const THINKING_MAP: Record<string, string> = {
-  "pplx-gpt-5.4": "gpt54_thinking",
-  "pplx-gpt": "gpt55_thinking",
+  "pplx-gpt-5.6-terra": "gpt56_terra_thinking",
+  "pplx-gpt-5.6-sol": "gpt56_sol_thinking",
   "pplx-sonnet": "claude50sonnetthinking",
   "pplx-opus": "claude48opusthinking",
   "pplx-kimi": "kimik26thinking",
+  "pplx-grok-4.5": "grok45medium",
 };
 
 export const CITATION_RE = /\[\d+\]/g;
@@ -127,9 +138,19 @@ export interface PplxBlock {
   };
 }
 
+export interface PplxUpsellInformation {
+  name?: string;
+  upsell_type?: string;
+  title?: string;
+  description?: string;
+  cta?: string;
+}
+
 export interface PplxStreamEvent {
   status?: string;
   final?: boolean;
+  final_sse_message?: boolean;
+  text_completed?: boolean;
   text?: string;
   blocks?: PplxBlock[];
   backend_uuid?: string;
@@ -137,6 +158,7 @@ export interface PplxStreamEvent {
   error_code?: string;
   error_message?: string;
   display_model?: string;
+  upsell_information?: PplxUpsellInformation;
 }
 
 // ─── SSE parsing ────────────────────────────────────────────────────────────
@@ -286,6 +308,9 @@ export function buildPplxRequestBody(
     override_no_search: false,
     client_search_results_cache_key: requestId,
     should_ask_for_mcp_tool_confirmation: true,
+    // Live browser (Chrome 150) always sends this; required by multi-step
+    // copilot streams that surface tool-approval / workflow widgets.
+    supports_tool_approval_modal: true,
     browser_agent_allow_once_from_toggle: false,
     force_enable_browser_agent: false,
     supported_features: ["browser_agent_permission_banner_v1.1"],
@@ -335,8 +360,21 @@ export interface ContentChunk {
   backendUuid?: string;
   thinking?: string;
   error?: string;
+  /** Structured error code for quota / rate-limit surfaces (e.g. quota_exhausted). */
+  errorCode?: string;
+  /**
+   * Suggested client/account cooldown in seconds when the stream failed due to
+   * advanced-model weekly quota (or similar). Downstream marks the connection
+   * rate_limited_until and VibeProxy limit badges parse this + "reset after Xs".
+   */
+  resetSeconds?: number;
   done?: boolean;
 }
+
+/** Default cooldown when Perplexity reports advanced-model weekly quota exhaustion
+ * without an explicit reset clock (weekly window is account-side). Long enough that
+ * rotation skips the account instead of hammering it every few seconds. */
+export const PPLX_ADVANCED_QUOTA_DEFAULT_RESET_SECONDS = 6 * 60 * 60;
 
 // The schematized API delivers the answer text in blocks whose `intended_usage`
 // is either the aggregate `ask_text` or per-segment `ask_text_<n>_markdown`
@@ -374,6 +412,75 @@ export function applyMarkdownDiff(acc: MarkdownAccumulator, patches: PplxDiffPat
   }
 }
 
+/** Extract goal descriptions from a materialized or diff-patched plan block. */
+function extractPlanGoalDescriptions(block: PplxBlock): string[] {
+  const out: string[] = [];
+  if (block.plan_block?.goals) {
+    for (const goal of block.plan_block.goals) {
+      const desc = goal.description ?? "";
+      if (desc) out.push(desc);
+    }
+  }
+  // Live multi-step streams send plan as RFC-6902 diff patches, not plan_block.
+  const patches = block.diff_block?.patches;
+  if (Array.isArray(patches)) {
+    for (const patch of patches) {
+      const value = patch.value as
+        | { goals?: Array<{ description?: string }> }
+        | undefined;
+      if (value && Array.isArray(value.goals)) {
+        for (const goal of value.goals) {
+          const desc = goal.description ?? "";
+          if (desc) out.push(desc);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+export interface PplxQuotaError {
+  message: string;
+  errorCode: string;
+  resetSeconds: number;
+}
+
+function formatUpsellError(upsell: PplxUpsellInformation | undefined): PplxQuotaError | null {
+  if (!upsell) return null;
+  const name = String(upsell.name || "");
+  // advanced_models_quota_low = weekly advanced-model (Opus/Sonnet/GPT/…) budget
+  // exhausted. Browser still often downgrades to turbo; when no answer text is
+  // produced we must surface this instead of a silent "empty content" 502.
+  if (
+    name === "advanced_models_quota_low" ||
+    name.includes("quota") ||
+    String(upsell.upsell_type || "").toUpperCase().includes("UPGRADE")
+  ) {
+    const title = (upsell.title || "").trim();
+    const desc = (upsell.description || "").trim();
+    const detail = [title, desc].filter(Boolean).join(" — ");
+    const base = detail
+      ? `Perplexity advanced model quota exhausted: ${detail}`
+      : "Perplexity advanced model quota exhausted for this account this week. Use pplx-auto/pplx-sonar, wait for the weekly reset, or upgrade (Perplexity Max).";
+    const resetSeconds = PPLX_ADVANCED_QUOTA_DEFAULT_RESET_SECONDS;
+    // Append human "reset after …" so VibeProxy's existing message parsers
+    // (and accountFallback.formatRetryAfter consumers) pick up the cooldown.
+    const h = Math.floor(resetSeconds / 3600);
+    const m = Math.floor((resetSeconds % 3600) / 60);
+    const s = resetSeconds % 60;
+    const parts: string[] = [];
+    if (h > 0) parts.push(`${h}h`);
+    if (m > 0) parts.push(`${m}m`);
+    if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+    return {
+      message: `${base} (reset after ${parts.join(" ")})`,
+      errorCode: "quota_exhausted",
+      resetSeconds,
+    };
+  }
+  return null;
+}
+
 export async function* extractContent(
   eventStream: ReadableStream<Uint8Array>,
   signal?: AbortSignal | null
@@ -385,6 +492,8 @@ export async function* extractContent(
   // Per-usage reconstructed answer-text blocks + the locked primary usage.
   const mdState = new Map<string, MarkdownAccumulator>();
   let primaryUsage: string | null = null;
+  let lastUpsell: PplxUpsellInformation | undefined;
+  let sawTextCompleted = false;
 
   for await (const event of readPplxSseEvents(eventStream, signal)) {
     if (event.error_code || event.error_message) {
@@ -396,6 +505,8 @@ export async function* extractContent(
     }
 
     if (event.backend_uuid) backendUuid = event.backend_uuid;
+    if (event.upsell_information) lastUpsell = event.upsell_information;
+    if (event.text_completed === true) sawTextCompleted = true;
 
     const blocks = event.blocks ?? [];
     for (const block of blocks) {
@@ -423,10 +534,9 @@ export async function* extractContent(
         }
       }
 
-      // Thinking: plan goals
-      if (usage === "plan" && block.plan_block?.goals) {
-        for (const goal of block.plan_block.goals) {
-          const desc = goal.description ?? "";
+      // Thinking: plan goals (materialized plan_block OR live multi-step diff_block)
+      if (usage === "plan") {
+        for (const desc of extractPlanGoalDescriptions(block)) {
           if (desc && !seenThinking.has(desc)) {
             seenThinking.add(desc);
             yield { thinking: desc, backendUuid: backendUuid ?? undefined };
@@ -455,14 +565,36 @@ export async function* extractContent(
       }
 
       // Prefer the aggregate `ask_text` block; otherwise lock the first seen.
+      // When both ask_text and ask_text_N_markdown stream the same chunks,
+      // prefer whichever currently has the longest reconstructed answer so a
+      // late-arriving longer track wins (live multi-step streams).
       if (usage === "ask_text") {
         primaryUsage = "ask_text";
       } else if (!primaryUsage) {
         primaryUsage = usage;
+      } else if (primaryUsage !== "ask_text" && primaryUsage !== usage) {
+        const curLen = (mdState.get(primaryUsage)?.chunks ?? []).join("").length;
+        const newLen = (acc.chunks ?? []).join("").length;
+        if (newLen > curLen) primaryUsage = usage;
       }
     }
 
     // Emit at most one content delta per event, from the locked primary usage.
+    // Also re-evaluate longest track when multiple answer usages exist.
+    if (mdState.size > 0) {
+      let bestUsage = primaryUsage;
+      let bestLen = bestUsage ? (mdState.get(bestUsage)?.chunks ?? []).join("").length : 0;
+      for (const [u, acc] of mdState) {
+        const len = acc.chunks.join("").length;
+        // Prefer ask_text on ties; otherwise the longest reconstructed answer.
+        if (len > bestLen || (len === bestLen && u === "ask_text")) {
+          bestLen = len;
+          bestUsage = u;
+        }
+      }
+      if (bestUsage) primaryUsage = bestUsage;
+    }
+
     if (primaryUsage) {
       const currentAnswer = (mdState.get(primaryUsage)?.chunks ?? []).join("");
       if (currentAnswer.length > seenLen) {
@@ -487,10 +619,39 @@ export async function* extractContent(
       }
     }
 
-    // Only stop on the terminal COMPLETED frame. A `final:true` flag can appear
-    // on a still-PENDING frame BEFORE the COMPLETED frame that materializes the
-    // full markdown_block — breaking on `final` there drops the answer.
+    // Terminal conditions for live multi-step copilot streams (Chrome 150+):
+    // - status COMPLETED (classic)
+    // - text_completed:true once answer text has been delivered (live multi-step
+    //   often never emits COMPLETED — only PENDING/REVIEWING + text_completed)
+    // Do NOT stop solely on `final:true` while PENDING without text_completed —
+    // that flag can appear before the last markdown chunk frame.
     if (event.status === "COMPLETED") break;
+    if (sawTextCompleted && fullAnswer.length > 0) break;
+  }
+
+  // Prefer the longest reconstructed answer track at end-of-stream (in case
+  // ask_text lagged behind ask_text_0_markdown or vice versa).
+  if (mdState.size > 0) {
+    let best = fullAnswer;
+    for (const acc of mdState.values()) {
+      const joined = acc.chunks.join("");
+      if (joined.length > best.length) best = joined;
+    }
+    fullAnswer = best;
+  }
+
+  if (!fullAnswer.trim()) {
+    const upsellErr = formatUpsellError(lastUpsell);
+    if (upsellErr) {
+      yield {
+        error: upsellErr.message,
+        errorCode: upsellErr.errorCode,
+        resetSeconds: upsellErr.resetSeconds,
+        done: true,
+        backendUuid: backendUuid ?? undefined,
+      };
+      return;
+    }
   }
 
   yield { delta: "", answer: fullAnswer, backendUuid: backendUuid ?? undefined, done: true };

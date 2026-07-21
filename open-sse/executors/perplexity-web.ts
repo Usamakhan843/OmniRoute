@@ -267,12 +267,28 @@ async function buildNonStreamingResponse(
   for await (const chunk of extractContent(eventStream, signal)) {
     if (chunk.backendUuid) respBackendUuid = chunk.backendUuid;
     if (chunk.error) {
-      return new Response(
-        JSON.stringify({
-          error: { message: chunk.error, type: "upstream_error", code: "PPLX_ERROR" },
-        }),
-        { status: 502, headers: { "Content-Type": "application/json" } }
-      );
+      // Quota exhaustion → 429 + reset_seconds so OmniRoute marks rate_limited_until
+      // and VibeProxy limit badges / rotation skip parse the same shape as model_cooldown.
+      const isQuota =
+        chunk.errorCode === "quota_exhausted" ||
+        /quota exhausted/i.test(chunk.error) ||
+        (typeof chunk.resetSeconds === "number" && chunk.resetSeconds > 0);
+      const status = isQuota ? 429 : 502;
+      const code = chunk.errorCode || (isQuota ? "quota_exhausted" : "PPLX_ERROR");
+      const type = isQuota ? "quota_exhausted" : "upstream_error";
+      const body: Record<string, unknown> = {
+        message: chunk.error,
+        type,
+        code,
+      };
+      if (typeof chunk.resetSeconds === "number" && chunk.resetSeconds > 0) {
+        body.reset_seconds = chunk.resetSeconds;
+      }
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (typeof chunk.resetSeconds === "number" && chunk.resetSeconds > 0) {
+        headers["Retry-After"] = String(chunk.resetSeconds);
+      }
+      return new Response(JSON.stringify({ error: body }), { status, headers });
     }
     if (chunk.thinking) {
       thinkingParts.push(chunk.thinking);
@@ -346,7 +362,8 @@ export class PerplexityWebExecutor extends BaseExecutor {
     let pplxMode: string;
     let modelPref: string;
     if (thinking && THINKING_MAP[model]) {
-      pplxMode = "search";
+      // Thinking variants still ride the copilot path (matches live web client).
+      pplxMode = "copilot";
       modelPref = THINKING_MAP[model];
       log?.info?.("PPLX-WEB", `Thinking mode → ${model} using ${modelPref}`);
     } else if (MODEL_MAP[model]) {
@@ -423,7 +440,11 @@ export class PerplexityWebExecutor extends BaseExecutor {
         body: JSON.stringify(pplxBody),
         signal: signal ?? null,
         stream: true,
-        streamEofSymbol: "[DONE]",
+        // Perplexity terminates SSE with `event: end_of_stream` (or just closes
+        // the socket). It never sends OpenAI's `[DONE]` marker — waiting for
+        // that symbol made the TLS file-tail hang until the hard timeout, which
+        // could drop the last markdown frames → empty content for pplx-opus.
+        streamEofSymbol: "event: end_of_stream",
       });
     } catch (err) {
       const isTlsUnavail = err instanceof TlsClientUnavailableError;

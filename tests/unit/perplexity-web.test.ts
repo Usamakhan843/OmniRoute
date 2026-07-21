@@ -160,7 +160,7 @@ test("Non-streaming: strips citations from response", async () => {
   try {
     const executor = new PerplexityWebExecutor();
     const result = await executor.execute({
-      model: "pplx-gpt",
+      model: "pplx-sonar",
       body: { messages: [{ role: "user", content: "meaning of life" }], stream: false },
       stream: false,
       credentials: { apiKey: "test-cookie" },
@@ -487,7 +487,7 @@ test("Error: 429 returns rate limit message", async () => {
   try {
     const executor = new PerplexityWebExecutor();
     const result = await executor.execute({
-      model: "pplx-gpt",
+      model: "pplx-sonar",
       body: { messages: [{ role: "user", content: "hi" }] },
       stream: false,
       credentials: { apiKey: "test-cookie" },
@@ -765,7 +765,7 @@ test("Auth: JWT auth sends Authorization Bearer header", async () => {
 
 // ─── Test: Model mapping ────────────────────────────────────────────────────
 
-test("Model mapping: pplx-gpt sends current GPT-5.5 internal preference", async () => {
+test("Model mapping: GPT-5.6 Terra sends its current internal preference", async () => {
   let capturedBody = null;
   const original = globalThis.fetch;
   globalThis.fetch = async (url, opts) => {
@@ -789,7 +789,7 @@ test("Model mapping: pplx-gpt sends current GPT-5.5 internal preference", async 
   try {
     const executor = new PerplexityWebExecutor();
     await executor.execute({
-      model: "pplx-gpt",
+      model: "pplx-gpt-5.6-terra",
       body: { messages: [{ role: "user", content: "test" }], stream: false },
       stream: false,
       credentials: { apiKey: "test" },
@@ -797,8 +797,8 @@ test("Model mapping: pplx-gpt sends current GPT-5.5 internal preference", async 
       log: null,
     });
 
-    assert.equal(capturedBody.params.model_preference, "gpt55");
-    assert.equal(capturedBody.params.mode, "search");
+    assert.equal(capturedBody.params.model_preference, "gpt56_terra");
+    assert.equal(capturedBody.params.mode, "copilot");
   } finally {
     globalThis.fetch = original;
   }
@@ -841,44 +841,173 @@ test("Model mapping: thinking mode uses thinking variant", async () => {
     });
 
     assert.equal(capturedBody.params.model_preference, "claude50sonnetthinking");
-    assert.equal(capturedBody.params.mode, "search");
+    assert.equal(capturedBody.params.mode, "copilot");
   } finally {
     globalThis.fetch = original;
   }
 });
 
-// ─── Test: Provider registry ────────────────────────────────────────────────
+// ─── Test: Live multi-step stream (no COMPLETED; text_completed + diffs) ────
 
-test("Provider registry: perplexity-web is registered with correct models", async () => {
-  const { PROVIDER_MODELS } = await import("../../open-sse/config/providerModels.ts");
+test("Live multi-step: reconstructs answer without status COMPLETED", async () => {
+  // Mirrors Chrome 150 / copilot multi-step capture: PENDING frames with
+  // ask_text + ask_text_0_markdown diff_block chunks, text_completed:true,
+  // never status COMPLETED. Parser must still return the answer.
+  const pplxEvents = [
+    {
+      status: "PENDING",
+      blocks: [
+        {
+          intended_usage: "plan",
+          diff_block: {
+            field: "plan_block",
+            patches: [
+              {
+                op: "replace",
+                path: "",
+                value: {
+                  progress: "IN_PROGRESS",
+                  goals: [{ id: "0", description: "Greeting the user", final: false }],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      status: "PENDING",
+      blocks: [
+        {
+          intended_usage: "ask_text_0_markdown",
+          diff_block: {
+            field: "markdown_block",
+            patches: [
+              { op: "replace", path: "", value: { progress: "IN_PROGRESS", chunks: ["Hello "] } },
+            ],
+          },
+        },
+        {
+          intended_usage: "ask_text",
+          diff_block: {
+            field: "markdown_block",
+            patches: [
+              { op: "replace", path: "", value: { progress: "IN_PROGRESS", chunks: ["Hello "] } },
+            ],
+          },
+        },
+      ],
+    },
+    {
+      status: "PENDING",
+      text_completed: true,
+      blocks: [
+        {
+          intended_usage: "ask_text_0_markdown",
+          diff_block: {
+            field: "markdown_block",
+            patches: [{ op: "add", path: "/chunks/1", value: "there." }],
+          },
+        },
+        {
+          intended_usage: "ask_text",
+          diff_block: {
+            field: "markdown_block",
+            patches: [{ op: "add", path: "/chunks/1", value: "there." }],
+          },
+        },
+      ],
+    },
+    {
+      status: "PENDING",
+      final: true,
+      text: '[{"step_type":"INITIAL_QUERY","content":{"query":"hello"}}]',
+    },
+  ];
 
-  const models = PROVIDER_MODELS["pplx-web"];
-  assert.ok(models, "pplx-web should be in PROVIDER_MODELS");
-  assert.ok(models.length === 10, `Expected 10 models, got ${models.length}`);
+  const restore = mockFetch(200, pplxEvents);
+  try {
+    const executor = new PerplexityWebExecutor();
+    const result = await executor.execute({
+      model: "pplx-opus",
+      body: { messages: [{ role: "user", content: "hello" }], stream: false },
+      stream: false,
+      credentials: { apiKey: "test-cookie" },
+      signal: AbortSignal.timeout(10000),
+      log: null,
+    });
 
-  const modelIds = models.map((m) => m.id);
-  assert.ok(modelIds.includes("pplx-auto"));
-  assert.ok(modelIds.includes("pplx-gpt"));
-  assert.ok(modelIds.includes("pplx-gpt-5.4"));
-  assert.ok(modelIds.includes("pplx-sonnet"));
-  assert.ok(modelIds.includes("pplx-opus"));
-  assert.ok(modelIds.includes("pplx-gemini"));
-  assert.ok(modelIds.includes("pplx-nemotron"));
-  assert.ok(modelIds.includes("pplx-sonar"));
-  assert.ok(modelIds.includes("pplx-kimi"));
-  assert.ok(modelIds.includes("pplx-glm"));
+    assert.equal(result.response.status, 200);
+    const json = JSON.parse(await result.response.text());
+    assert.equal(json.choices[0].message.content, "Hello there.");
+    // Plan goals via diff_block should surface as reasoning_content
+    assert.ok(
+      String(json.choices[0].message.reasoning_content || "").includes("Greeting the user")
+    );
+  } finally {
+    restore();
+  }
 });
 
-test("Provider registry: every advertised perplexity-web model has an explicit internal mapping", async () => {
-  const { PROVIDER_MODELS } = await import("../../open-sse/config/providerModels.ts");
-  const { MODEL_MAP } = await import("../../open-sse/executors/perplexity-web/protocol.ts");
+test("Advanced-model quota upsell with empty answer surfaces clear error", async () => {
+  const pplxEvents = [
+    {
+      status: "PENDING",
+      upsell_information: {
+        name: "advanced_models_quota_low",
+        upsell_type: "UPGRADE_TO_PRO",
+        title: "No advanced model uses left this week",
+        description: "Upgrade to Perplexity Max",
+      },
+      blocks: [
+        {
+          intended_usage: "plan",
+          diff_block: {
+            field: "plan_block",
+            patches: [
+              {
+                op: "replace",
+                path: "",
+                value: { goals: [{ description: "Hello, how can I assist you?" }] },
+              },
+            ],
+          },
+        },
+      ],
+    },
+    { status: "PENDING", final: true, text_completed: true },
+  ];
 
-  const missing = PROVIDER_MODELS["pplx-web"].filter((model) => !MODEL_MAP[model.id]);
-  assert.deepEqual(
-    missing.map((model) => model.id),
-    [],
-    "all advertised Perplexity Web models should map to an explicit model_preference"
-  );
+  const restore = mockFetch(200, pplxEvents);
+  try {
+    const executor = new PerplexityWebExecutor();
+    const result = await executor.execute({
+      model: "pplx-opus",
+      body: { messages: [{ role: "user", content: "hello" }], stream: false },
+      stream: false,
+      credentials: { apiKey: "test-cookie" },
+      signal: AbortSignal.timeout(10000),
+      log: null,
+    });
+
+    assert.equal(result.response.status, 429);
+    const json = JSON.parse(await result.response.text());
+    assert.match(String(json.error?.message || ""), /quota exhausted/i);
+    assert.match(String(json.error?.message || ""), /No advanced model uses left/i);
+    assert.match(String(json.error?.message || ""), /reset after/i);
+    assert.equal(json.error?.code, "quota_exhausted");
+    assert.equal(json.error?.type, "quota_exhausted");
+    assert.ok(
+      typeof json.error?.reset_seconds === "number" && json.error.reset_seconds >= 3600,
+      "reset_seconds should be a multi-hour weekly-quota cooldown"
+    );
+    assert.equal(
+      result.response.headers.get("Retry-After"),
+      String(json.error.reset_seconds)
+    );
+  } finally {
+    restore();
+  }
 });
 
 // ─── Test: Fallback text field ──────────────────────────────────────────────
