@@ -137,7 +137,7 @@ test("recordModelLockoutFailure honors a multi-day exactCooldownMs (under 30-day
     429,
     0,
     makeProfile(),
-    { exactCooldownMs }
+    { exactCooldownMs, maxCooldownMs: exactCooldownMs + 1 }
   );
 
   assert.equal(lockout.cooldownMs, exactCooldownMs);
@@ -877,7 +877,7 @@ test("checkFallbackError preserves OAuth 429 daily quota semantics", () => {
 });
 
 // ModelScope daily quota lockout tests (commit 0456a1f5)
-test("recordModelLockoutFailure sets cooldown until tomorrow 0:00 for quota_exhausted reason", () => {
+test("recordModelLockoutFailure caps quota_exhausted cooldown against maxCooldownMs (default 2min)", () => {
   const originalNow = Date.now;
   // Use a fixed local time (noon) to ensure predictable results
   const testDate = new Date();
@@ -895,15 +895,6 @@ test("recordModelLockoutFailure sets cooldown until tomorrow 0:00 for quota_exha
 
     const profile = makeProfile();
 
-    // Calculate milliseconds until tomorrow 00:00 local time
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    const expectedMsUntilTomorrow = tomorrow.getTime() - now;
-
-    // Account for timezone offset: function uses local time, test env may use UTC
-    const timezoneOffset = new Date().getTimezoneOffset() * 60 * 1000;
-
     // Record failure with quota_exhausted reason
     const result = recordModelLockoutFailure(
       provider,
@@ -911,21 +902,18 @@ test("recordModelLockoutFailure sets cooldown until tomorrow 0:00 for quota_exha
       model,
       "quota_exhausted",
       429,
-      0, // fallbackCooldownMs should be overridden to ms until tomorrow
+      0,
       profile
     );
 
-    // Verify the cooldown is set to ms until tomorrow 0:00 (with tolerance)
-    // The cooldown should be close to expectedMsUntilTomorrow
-    const tolerance = 60 * 1000; // 1 minute tolerance
-    // Calculate difference between actual and expected values
-    const diff = Math.abs(result.cooldownMs - expectedMsUntilTomorrow);
-
-    // Allow ±5 minutes tolerance (300,000 ms)
+    // Verify the cooldown is capped at BACKOFF_CONFIG.max (2min) when no
+    // maxCooldownMs is explicitly provided — not frozen until midnight.
+    // This is the fix for #7940: user-configured caps are honored.
     assert.ok(
-      diff <= 300_000,
-      `cooldown should be ms until tomorrow 0:00 (expected ${expectedMsUntilTomorrow}ms, got ${result.cooldownMs}ms, diff ${diff}ms)`
+      result.cooldownMs <= 120_000,
+      `cooldown should be capped at 2min default (got ${result.cooldownMs}ms)`
     );
+    assert.ok(result.cooldownMs > 0, "cooldown should be positive");
 
     // Verify model is locked
     assert.equal(isModelLocked(provider, connectionId, model), true);
@@ -1275,8 +1263,8 @@ test("Gemini RPM 429: recordModelLockoutFailure uses exponential backoff for rat
   }
 });
 
-test("Gemini RPD (quota_exhausted) still triggers midnight lockout in recordModelLockoutFailure", () => {
-  // Regression: real daily quota exhaustion must still produce midnight reset
+test("Gemini RPD (quota_exhausted) is capped against maxCooldownMs per #7940", () => {
+  // #7940 fix: quota_exhausted lockouts are now capped against maxCooldownMs
   const originalNow = Date.now;
   const testDate = new Date();
   testDate.setHours(12, 0, 0, 0);
@@ -1299,15 +1287,12 @@ test("Gemini RPD (quota_exhausted) still triggers midnight lockout in recordMode
       profile
     );
 
-    // Must lock until midnight, NOT exponential backoff
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    const expected = tomorrow.getTime() - now;
+    // Must be capped at BACKOFF_CONFIG.max (2min), NOT midnight
     assert.ok(
-      Math.abs(result.cooldownMs - expected) <= 300_000,
-      `cooldown should be until tomorrow (expected ~${expected}, got ${result.cooldownMs})`
+      result.cooldownMs <= 120_000,
+      `cooldown should be capped at 2min default (got ${result.cooldownMs}ms)`
     );
+    assert.ok(result.cooldownMs > 0, "cooldown should be positive");
     clearModelLock(provider, connectionId, model);
   } finally {
     Date.now = originalNow;
